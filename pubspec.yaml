@@ -1,0 +1,27 @@
+name: bookshelf_builder
+description: "Plan a built-in bookshelf around a window: elevation drawing, cut list and sheet count."
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.4
+
+dependencies:
+  equatable: ^3.0.0 # Value equality for domain models and cubit states
+  flutter:
+    sdk: flutter # The app framework
+  flutter_bloc: ^9.1.1 # State management (cubits)
+  pdf: ^3.13.1 # Builds the printable PDF document
+  printing: ^5.15.1 # Opens the print and save dialog for the PDF
+
+dev_dependencies:
+  bloc_test: ^10.0.0 # Cubit test helpers (blocTest)
+  flutter_lints: ^6.0.0 # Recommended lint set (see analysis_options.yaml)
+  flutter_test:
+    sdk: flutter # Widget and unit test framework
+
+flutter:
+
+  uses-material-design: true
