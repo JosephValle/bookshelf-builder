@@ -14,6 +14,7 @@ void main() {
     test('wall note mentions a French cleat and studs', () {
       expect(PlannerNotes.wall, contains('French cleat'));
       expect(PlannerNotes.wall, contains('studs'));
+      expect(PlannerNotes.wall, contains('anchor cleat'));
     });
 
     test('no note contains an em dash', () {

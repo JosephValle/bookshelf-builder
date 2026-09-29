@@ -30,6 +30,10 @@ class InputRanges {
   static const double shelfWidthMin = 12;
   static const double shelfWidthMax = 36;
 
+  /// Gap around the window slider range.
+  static const double gapMin = 0;
+  static const double gapMax = 12;
+
   /// Wall margin slider range (distance the shelves stay clear of an edge).
   static const double marginMin = 0;
   static const double marginMax = 24;

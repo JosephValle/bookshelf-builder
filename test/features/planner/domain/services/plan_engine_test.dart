@@ -2,6 +2,8 @@ import 'package:bookshelf_builder/features/planner/domain/models/inputs.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/plan_engine.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/plan_helpers.dart';
+
 void main() {
   const engine = PlanEngine();
 
@@ -51,11 +53,60 @@ void main() {
       expect(p.bottomBar.dividers, engine.compute(i).topBar.dividers);
     });
 
-    test('on the floor a 58 inch window needs fewer bottom dividers', () {
-      final p = engine.compute(const Inputs(windowW: 58));
-      expect(p.bottomBar.dividers, lessThan(p.topBar.dividers + 1));
+    test('on the floor the bottom bar can use the wider shelf span', () {
+      final p = planFor(const Inputs(windowW: 58, maxShelfWidth: 30));
       expect(p.bottomBar.dividers, 1);
       expect(p.topBar.dividers, 2);
+    });
+
+    test('the preferred shelf width narrows the bottom bar bays', () {
+      final wide = planFor(const Inputs(windowW: 58, maxShelfWidth: 30));
+      final narrow = planFor(const Inputs(windowW: 58));
+      expect(narrow.bottomBar.bayW, lessThan(wide.bottomBar.bayW));
+    });
+
+    test('the top bar never exceeds the box beam spacing', () {
+      final p = planFor(const Inputs(windowW: 58, maxShelfWidth: 36));
+      expect(p.topBar.bayW, lessThanOrEqualTo(24));
+    });
+
+    test('a wall width grows the columns to fill it', () {
+      final p = planFor(const Inputs(wallW: 90));
+      expect(p.ringW, 90);
+      expect(p.leftCol.colW, 21);
+      expect(p.rightCol.colW, 21);
+    });
+
+    test('a moved window makes uneven columns', () {
+      final p = planFor(const Inputs(wallW: 90, windowFromWallLeft: 10));
+      expect(p.ringW, 90);
+      expect(p.leftCol.colW, 10);
+      expect(p.rightCol.colW, 32);
+    });
+
+    test('margins keep the ring inside the usable wall', () {
+      final p = planFor(
+        const Inputs(wallW: 100, wallMarginLeft: 6, wallMarginRight: 10),
+      );
+      expect(p.ringW, 84);
+      expect(p.ringOffsetOnWall, 6);
+    });
+
+    test('without fill the columns keep their width', () {
+      final p = planFor(const Inputs(wallW: 90, fillWall: false));
+      expect(p.ringW, 76);
+    });
+
+    test('wide columns from a big wall get dividers', () {
+      final p = planFor(const Inputs(wallW: 90));
+      expect(p.leftCol.dividers, 0);
+      final wider = planFor(const Inputs(wallW: 96, windowFromWallLeft: 40));
+      expect(wider.leftCol.dividers, greaterThan(0));
+    });
+
+    test('the plan keeps the resolved inputs for drawing', () {
+      final p = planFor(const Inputs(wallW: 90));
+      expect(p.inputs.left, 21);
     });
 
     test('the stiffener widens the span limit and the plan reflects it', () {

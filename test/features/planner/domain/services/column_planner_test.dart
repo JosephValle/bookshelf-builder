@@ -35,12 +35,34 @@ void main() {
       expect(c.bayW, closeTo((38.5625 - 0.71875) / 2, 1e-9));
     });
 
-    test('the stiffener lets a wider column skip dividers', () {
-      const wide = Inputs(left: 34);
+    test('the stiffener lets a wider shelf width skip dividers', () {
+      const wide = Inputs(left: 34, maxShelfWidth: 36);
       final bare = setup(wide);
       final stiff = setup(wide.copyWith(edgeStiffener: true));
       expect(planner.plan(34, bare.i, bare.d).dividers, 1);
       expect(planner.plan(34, stiff.i, stiff.d).dividers, 0);
+    });
+
+    test('the preferred shelf width adds dividers before the limit does', () {
+      final narrow = setup(const Inputs(left: 30, maxShelfWidth: 16));
+      final c = planner.plan(30, narrow.i, narrow.d);
+      expect(c.clearW, closeTo(28.5625, 1e-9));
+      expect(c.dividers, 1);
+      expect(c.bayW, lessThanOrEqualTo(16));
+    });
+
+    test('a bay is never wider than the preferred shelf width', () {
+      for (final w in [16.0, 20.0, 24.0]) {
+        final s = setup(Inputs(left: 50, maxShelfWidth: w));
+        final c = planner.plan(50, s.i, s.d);
+        expect(c.bayW, lessThanOrEqualTo(w + 1e-9), reason: 'width $w');
+      }
+    });
+
+    test('the structural limit caps a generous shelf width', () {
+      final s = setup(const Inputs(left: 40, maxShelfWidth: 36));
+      final c = planner.plan(40, s.i, s.d);
+      expect(c.bayW, lessThanOrEqualTo(30));
     });
 
     test('a ring shorter than the target needs no fixed shelves', () {

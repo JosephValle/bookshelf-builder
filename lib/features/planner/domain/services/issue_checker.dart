@@ -69,10 +69,10 @@ class IssueChecker {
         'Depth ${f(inputs.depth)} is outside ${f(Limits.minDepth)} to ${f(Limits.maxDepth)}.',
       );
     }
-    if (inputs.windowW > Limits.maxWindowSpan + 1e-9) {
+    if (inputs.openW > Limits.maxWindowSpan + 1e-9) {
       add(
         Severity.error,
-        'Window is ${f(inputs.windowW)} wide, over the ${f(Limits.maxWindowSpan)} maxWindowSpan. Add a steel angle or mid-span support.',
+        'Window opening is ${f(inputs.openW)} wide (window plus gaps), over the ${f(Limits.maxWindowSpan)} maxWindowSpan. Add a steel angle or mid-span support.',
       );
     }
     for (final p in parts) {
@@ -89,10 +89,10 @@ class IssueChecker {
     final wallH = inputs.wallH;
     final usable = inputs.usableWallW;
     if (wallW != null && usable != null) {
-      if (usable < inputs.windowW - 1e-9) {
+      if (usable < inputs.openW - 1e-9) {
         add(
           Severity.error,
-          'Only ${f(usable)} of the wall is available between the margins, narrower than the ${f(inputs.windowW)} window.',
+          'Only ${f(usable)} of the wall is available between the margins, narrower than the ${f(inputs.openW)} window opening.',
         );
       } else if (dims.ringW > usable + 1e-9) {
         add(
@@ -112,7 +112,12 @@ class IssueChecker {
     }
     if (wallH != null) {
       final available = wallH - inputs.wallMarginTop;
-      if (dims.ringH > available + 1e-9) {
+      if (available < inputs.openH - 1e-9) {
+        add(
+          Severity.error,
+          'Only ${f(available)} of the wall height is available under the top margin, shorter than the ${f(inputs.openH)} window opening.',
+        );
+      } else if (dims.ringH > available + 1e-9) {
         add(
           Severity.error,
           'Ring height ${f(dims.ringH)} exceeds the ${f(available)} available under the top margin.',

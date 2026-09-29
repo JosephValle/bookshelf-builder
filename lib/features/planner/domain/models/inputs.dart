@@ -26,13 +26,37 @@ class Inputs extends Equatable {
     this.wallMarginLeft = 0,
     this.wallMarginRight = 0,
     this.windowFromWallLeft,
+    this.windowFromFloor,
+    this.gapTop = 0,
+    this.gapBottom = 0,
+    this.gapLeft = 0,
+    this.gapRight = 0,
   });
 
-  /// Clear window opening width.
+  /// Window width (the glass or frame you are building around).
   final double windowW;
 
-  /// Clear window opening height.
+  /// Window height.
   final double windowH;
+
+  /// Gap left between the window and the shelves above it (trim, casing).
+  final double gapTop;
+
+  /// Gap between the window and the shelves below it.
+  final double gapBottom;
+
+  /// Gap between the window and the left column.
+  final double gapLeft;
+
+  /// Gap between the window and the right column.
+  final double gapRight;
+
+  /// Width of the framed opening the ring surrounds: the window plus its
+  /// left and right gaps.
+  double get openW => windowW + gapLeft + gapRight;
+
+  /// Height of the framed opening: the window plus its top and bottom gaps.
+  double get openH => windowH + gapTop + gapBottom;
 
   /// Left column outer width.
   final double left;
@@ -92,6 +116,10 @@ class Inputs extends Equatable {
   /// Centered on the wall when unset.
   final double? windowFromWallLeft;
 
+  /// Optional distance from the floor to the window's bottom edge. Centered
+  /// between the floor and the top margin when unset.
+  final double? windowFromFloor;
+
   /// Width of the wall between the left and right margins, or null when no
   /// wall width is set. Never negative.
   double? get usableWallW {
@@ -103,41 +131,76 @@ class Inputs extends Equatable {
   /// Distance from the wall's left edge to the window's left edge, or null
   /// when no wall width is set.
   ///
-  /// Centered between the margins unless [windowFromWallLeft] is given, and
-  /// always kept between the margins.
+  /// Centered between the margins unless [windowFromWallLeft] is given. The
+  /// framed opening (window plus gaps) is always kept between the margins.
   double? get windowLeftOnWall {
     final usable = usableWallW;
     if (usable == null) return null;
-    final room = (usable - windowW).clamp(0.0, double.infinity);
-    final p = (windowFromWallLeft ?? wallMarginLeft + room / 2).clamp(
-      wallMarginLeft,
-      wallMarginLeft + room,
-    );
-    return p;
+    final room = (usable - openW).clamp(0.0, double.infinity);
+    final lo = wallMarginLeft + gapLeft;
+    return (windowFromWallLeft ?? lo + room / 2).clamp(lo, lo + room);
   }
 
   /// Horizontal position of the ring's left edge on the wall, or null when no
   /// wall width is set.
   double? get effectiveRingOffset {
     final p = windowLeftOnWall;
-    return p == null ? null : p - left;
+    return p == null ? null : p - gapLeft - left;
   }
 
-  /// These inputs with the column widths resolved.
+  /// Height of the wall below the top margin, or null when no wall height is
+  /// set. Never negative.
+  double? get usableWallH {
+    final h = wallH;
+    if (h == null) return null;
+    return (h - wallMarginTop).clamp(0.0, double.infinity);
+  }
+
+  /// Distance from the floor to the window's bottom edge, or null when no wall
+  /// height is set.
   ///
-  /// When a wall width is set and [fillWall] is on, the columns grow so the
-  /// ring runs from the left margin to the right margin, with the window at
-  /// [windowLeftOnWall]. Otherwise the inputs are returned unchanged.
-  Inputs get resolved {
-    final w = wallW;
-    final p = windowLeftOnWall;
-    if (w == null || p == null || !fillWall) return this;
-    final leftW = (p - wallMarginLeft).clamp(0.0, double.infinity);
-    final rightW = (w - wallMarginRight - p - windowW).clamp(
-      0.0,
-      double.infinity,
+  /// Centered between the floor and the top margin unless [windowFromFloor]
+  /// is given. The framed opening is always kept below the top margin.
+  double? get windowBottomOnWall {
+    final usable = usableWallH;
+    if (usable == null) return null;
+    final room = (usable - openH).clamp(0.0, double.infinity);
+    return (windowFromFloor ?? gapBottom + room / 2).clamp(
+      gapBottom,
+      gapBottom + room,
     );
-    return copyWith(left: leftW, right: rightW);
+  }
+
+  /// These inputs with the column widths and bar heights resolved.
+  ///
+  /// When [fillWall] is on, a wall width grows the columns so the ring runs
+  /// from the left margin to the right margin, and a wall height grows the
+  /// bars so the ring runs from the floor to the top margin. The window sits
+  /// at [windowLeftOnWall] and [windowBottomOnWall]. Otherwise the inputs are
+  /// returned unchanged.
+  Inputs get resolved {
+    if (!fillWall) return this;
+    var r = this;
+    final w = wallW;
+    final px = windowLeftOnWall;
+    if (w != null && px != null) {
+      r = r.copyWith(
+        left: (px - gapLeft - wallMarginLeft).clamp(0.0, double.infinity),
+        right: (w - wallMarginRight - px - windowW - gapRight).clamp(
+          0.0,
+          double.infinity,
+        ),
+      );
+    }
+    final usable = usableWallH;
+    final py = windowBottomOnWall;
+    if (usable != null && py != null) {
+      r = r.copyWith(
+        bottom: (py - gapBottom).clamp(0.0, double.infinity),
+        top: (usable - py - windowH - gapTop).clamp(0.0, double.infinity),
+      );
+    }
+    return r;
   }
 
   /// Returns a copy with the given fields replaced.
@@ -164,6 +227,11 @@ class Inputs extends Equatable {
     double? wallMarginLeft,
     double? wallMarginRight,
     double? Function()? windowFromWallLeft,
+    double? Function()? windowFromFloor,
+    double? gapTop,
+    double? gapBottom,
+    double? gapLeft,
+    double? gapRight,
   }) {
     return Inputs(
       windowW: windowW ?? this.windowW,
@@ -187,6 +255,13 @@ class Inputs extends Equatable {
       windowFromWallLeft: windowFromWallLeft != null
           ? windowFromWallLeft()
           : this.windowFromWallLeft,
+      windowFromFloor: windowFromFloor != null
+          ? windowFromFloor()
+          : this.windowFromFloor,
+      gapTop: gapTop ?? this.gapTop,
+      gapBottom: gapBottom ?? this.gapBottom,
+      gapLeft: gapLeft ?? this.gapLeft,
+      gapRight: gapRight ?? this.gapRight,
     );
   }
 

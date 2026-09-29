@@ -10,6 +10,8 @@ void main() {
       expect(InputRanges.depthMin, lessThan(InputRanges.depthMax));
       expect(InputRanges.toeKickMin, lessThan(InputRanges.toeKickMax));
       expect(InputRanges.clearHMin, lessThan(InputRanges.clearHMax));
+      expect(InputRanges.shelfWidthMin, lessThan(InputRanges.shelfWidthMax));
+      expect(InputRanges.marginMin, lessThan(InputRanges.marginMax));
     });
 
     test('depth presets are 1x8, 1x10 and 1x12 plus the back', () {

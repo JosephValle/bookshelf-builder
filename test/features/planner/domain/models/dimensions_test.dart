@@ -14,6 +14,20 @@ void main() {
       expect(d.spanLimit, 30);
     });
 
+    test('shelf width is the preferred width when under the limit', () {
+      expect(Dimensions.from(const Inputs()).shelfWidth, 24);
+      expect(Dimensions.from(const Inputs(maxShelfWidth: 18)).shelfWidth, 18);
+    });
+
+    test('shelf width is capped by the structural limit', () {
+      expect(Dimensions.from(const Inputs(maxShelfWidth: 36)).shelfWidth, 30);
+      expect(
+        Dimensions.from(const Inputs(maxShelfWidth: 36, edgeStiffener: true))
+            .shelfWidth,
+        36,
+      );
+    });
+
     test('kick is zero when not on the floor', () {
       final d = Dimensions.from(const Inputs(onFloor: false));
       expect(d.kick, 0);

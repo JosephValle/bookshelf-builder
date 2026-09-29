@@ -52,8 +52,8 @@ class PartsBuilder {
     add('Bottom panel', 1, dims.ringW, dp, p34);
     add('Outer column panel', 2, dims.sideH, dp, p34);
     add('Inner column panel', 2, dims.sideH, dp, p34);
-    add('Head panel', 1, inputs.windowW, dp, p34);
-    add('Sill panel', 1, inputs.windowW, dp, p34);
+    add('Head panel', 1, inputs.openW, dp, p34);
+    add('Sill panel', 1, inputs.openW, dp, p34);
     add('Left column shelf', leftCol.shelves, leftCol.clearW, dp, p34);
     add('Right column shelf', rightCol.shelves, rightCol.clearW, dp, p34);
     add('Top bar divider', topBar.dividers, topBar.dividerLength, dp, p34);
@@ -88,12 +88,12 @@ class PartsBuilder {
       add(toeKickName, 1, dims.ringW, inputs.toeKick, p34);
     }
     final cleatW = math.min(Limits.anchorCleatW, topBar.clearH);
-    add(topCleatName, 1, inputs.windowW, cleatW, p34);
+    add(topCleatName, 1, inputs.openW, cleatW, p34);
     if (!inputs.onFloor) {
       add(
         bottomCleatName,
         1,
-        inputs.windowW,
+        inputs.openW,
         math.min(Limits.anchorCleatW, bottomBar.clearH),
         p34,
       );
@@ -101,11 +101,11 @@ class PartsBuilder {
     const p14 = PartMaterial.ply14;
     add('Back panel, left column', 1, dims.ringH, inputs.left, p14);
     add('Back panel, right column', 1, dims.ringH, inputs.right, p14);
-    add('Back panel, top bar', 1, inputs.windowW, inputs.top, p14);
-    add('Back panel, bottom bar', 1, inputs.windowW, inputs.bottom, p14);
+    add('Back panel, top bar', 1, inputs.openW, inputs.top, p14);
+    add('Back panel, bottom bar', 1, inputs.openW, inputs.bottom, p14);
 
     if (inputs.edgeStiffener) {
-      var edge = dims.ringW * 2 + inputs.windowW * 2;
+      var edge = dims.ringW * 2 + inputs.openW * 2;
       edge +=
           leftCol.clearW * leftCol.shelves + rightCol.clearW * rightCol.shelves;
       if (topBar.tiers == 2) edge += topBar.bayW * (topBar.dividers + 1);

@@ -96,8 +96,8 @@ void main() {
     test('resolved runs the ring from margin to margin', () {
       const i = Inputs(wallW: 100, wallMarginLeft: 6, wallMarginRight: 10);
       final r = i.resolved;
-      expect(r.left, 14);
-      expect(r.right, 22);
+      expect(r.left, 18);
+      expect(r.right, 18);
       expect(6 + r.left + r.windowW + r.right, 90);
     });
 

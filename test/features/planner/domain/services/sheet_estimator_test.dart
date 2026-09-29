@@ -38,6 +38,12 @@ void main() {
       expect(tall.sheets.neededStrips, greaterThan(0));
     });
 
+    test('cleats and the toe kick share strips instead of costing a sheet', () {
+      final off = planFor(const Inputs(onFloor: false)).sheets;
+      final on = planFor().sheets;
+      expect(on.neededStrips - off.neededStrips, lessThanOrEqualTo(2));
+    });
+
     test('a huge ring needs more sheets', () {
       final small = planFor().sheets.sheets34;
       final big = planFor(const Inputs(windowW: 60, windowH: 60))

@@ -16,6 +16,10 @@ void main() {
       expect(Limits.maxShelfSpanStiffened, greaterThan(Limits.maxShelfSpan));
     });
 
+    test('the anchor cleat is 3-1/2 inches wide', () {
+      expect(Limits.anchorCleatW, 3.5);
+    });
+
     test('sheet is 4 by 8 feet', () {
       expect(Limits.sheetW, 48);
       expect(Limits.sheetL, 96);

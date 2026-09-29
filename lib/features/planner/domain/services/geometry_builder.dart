@@ -36,11 +36,11 @@ class GeometryBuilder {
     panels
       ..add(Box(0, 0, dims.ringW, t))
       ..add(Box(0, bottomY - t, dims.ringW, t))
-      ..add(Box(inputs.left, inputs.top - t, inputs.windowW, t))
-      ..add(Box(inputs.left, inputs.top + inputs.windowH, inputs.windowW, t))
+      ..add(Box(inputs.left, inputs.top - t, inputs.openW, t))
+      ..add(Box(inputs.left, inputs.top + inputs.openH, inputs.openW, t))
       ..add(Box(0, t, t, dims.sideH))
       ..add(Box(inputs.left - t, t, t, dims.sideH))
-      ..add(Box(inputs.left + inputs.windowW, t, t, dims.sideH))
+      ..add(Box(inputs.left + inputs.openW, t, t, dims.sideH))
       ..add(Box(dims.ringW - t, t, t, dims.sideH));
 
     void column(ColumnPlan c, double x0) {
@@ -57,7 +57,7 @@ class GeometryBuilder {
     }
 
     column(leftCol, t);
-    column(rightCol, inputs.left + inputs.windowW + t);
+    column(rightCol, inputs.left + inputs.openW + t);
 
     void bar(BarPlan b, double y0, double spanLimit) {
       final tierH = b.tiers == 2 ? (b.clearH - t) / 2 : b.clearH;
@@ -77,7 +77,7 @@ class GeometryBuilder {
     }
 
     bar(topBar, t, topBarSpanLimit);
-    bar(bottomBar, inputs.top + inputs.windowH + t, bottomBarSpanLimit);
+    bar(bottomBar, inputs.top + inputs.openH + t, bottomBarSpanLimit);
 
     return Geometry(
       panels: panels,
@@ -85,7 +85,13 @@ class GeometryBuilder {
           ? Box(0, dims.ringH - dims.kick, dims.ringW, dims.kick)
           : null,
       bays: bays,
-      windowBox: Box(inputs.left, inputs.top, inputs.windowW, inputs.windowH),
+      windowBox: Box(
+        inputs.left + inputs.gapLeft,
+        inputs.top + inputs.gapTop,
+        inputs.windowW,
+        inputs.windowH,
+      ),
+      openingBox: Box(inputs.left, inputs.top, inputs.openW, inputs.openH),
     );
   }
 }

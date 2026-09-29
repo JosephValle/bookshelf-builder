@@ -17,8 +17,8 @@ class Dimensions extends Equatable {
 
   /// Derives dimensions from [i].
   factory Dimensions.from(Inputs i) {
-    final ringW = i.left + i.windowW + i.right;
-    final ringH = i.top + i.windowH + i.bottom;
+    final ringW = i.left + i.openW + i.right;
+    final ringH = i.top + i.openH + i.bottom;
     final kick = i.onFloor ? i.toeKick : 0.0;
     final span = i.edgeStiffener
         ? Limits.maxShelfSpanStiffened

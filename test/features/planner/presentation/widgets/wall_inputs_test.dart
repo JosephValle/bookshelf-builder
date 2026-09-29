@@ -94,7 +94,7 @@ void main() {
 
     testWidgets('the slider moves the window', (tester) async {
       await pump(tester, start: const Inputs(wallW: 120));
-      final r = tester.getRect(find.byType(Slider));
+      final r = tester.getRect(find.byType(Slider).last);
       await tester.tapAt(Offset(r.left + r.width * 0.9, r.center.dy));
       await tester.pump();
       expect(current.windowFromWallLeft, greaterThan(36));

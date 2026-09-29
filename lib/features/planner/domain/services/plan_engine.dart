@@ -60,13 +60,13 @@ class PlanEngine {
         ? dims.spanLimit
         : Limits.boxBeamMaxWebSpacing;
     final topBar = bars.plan(
-      windowW: inputs.windowW,
+      windowW: inputs.openW,
       barH: inputs.top,
       kick: 0,
       span: math.min(dims.shelfWidth, topLimit),
     );
     final bottomBar = bars.plan(
-      windowW: inputs.windowW,
+      windowW: inputs.openW,
       barH: inputs.bottom,
       kick: dims.kick,
       span: math.min(dims.shelfWidth, bottomLimit),

@@ -38,7 +38,7 @@ void main() {
     test('3/4 inch parts are as wide as the panel depth', () {
       final wide = parts
           .where((p) => p.material == PartMaterial.ply34)
-          .where((p) => p.name != PartsBuilder.toeKickName);
+          .where((p) => !PartsBuilder.isNarrowStrip(p.name));
       for (final p in wide) {
         expect(p.width, closeTo(11.03125, 1e-9));
       }
@@ -57,6 +57,18 @@ void main() {
       expect(named(parts, 'Back panel, left column').width, 14);
     });
 
+    test('the top bar has a solid anchor cleat', () {
+      final cleat = named(parts, PartsBuilder.topCleatName);
+      expect(cleat.qty, 1);
+      expect(cleat.length, 48);
+      expect(cleat.width, 3.5);
+      expect(cleat.material, PartMaterial.ply34);
+    });
+
+    test('no bottom cleat when resting on the floor', () {
+      expect(parts.any((p) => p.name == PartsBuilder.bottomCleatName), isFalse);
+    });
+
     test('no edge band and no column dividers by default', () {
       expect(parts.any((p) => p.material == PartMaterial.edgeBand), isFalse);
       expect(parts.any((p) => p.name.contains('column divider')), isFalse);
@@ -67,6 +79,26 @@ void main() {
     test('no toe kick when not on the floor', () {
       final parts = planFor(const Inputs(onFloor: false)).parts;
       expect(parts.any((p) => p.name == PartsBuilder.toeKickName), isFalse);
+    });
+
+    test('off the floor the bottom bar gets a cleat too', () {
+      final parts = planFor(const Inputs(onFloor: false)).parts;
+      expect(named(parts, PartsBuilder.bottomCleatName).width, 3.5);
+    });
+
+    test('a short bar gets a shorter cleat', () {
+      final parts = planFor(const Inputs(top: 4.5)).parts;
+      expect(
+        named(parts, PartsBuilder.topCleatName).width,
+        closeTo(4.5 - 1.4375, 1e-9),
+      );
+    });
+
+    test('isNarrowStrip recognizes the ripped strips only', () {
+      expect(PartsBuilder.isNarrowStrip(PartsBuilder.toeKickName), isTrue);
+      expect(PartsBuilder.isNarrowStrip(PartsBuilder.topCleatName), isTrue);
+      expect(PartsBuilder.isNarrowStrip(PartsBuilder.bottomCleatName), isTrue);
+      expect(PartsBuilder.isNarrowStrip('Top panel'), isFalse);
     });
 
     test('edge band appears with the stiffener', () {

@@ -21,6 +21,11 @@ class SummaryBuilder {
         'Ring: ${f(plan.ringW)} wide by ${f(plan.ringH)} tall, ${f(i.depth)} deep',
       )
       ..writeln('Window: ${f(i.windowW)} by ${f(i.windowH)}')
+      ..writeln(
+        i.gapTop + i.gapBottom + i.gapLeft + i.gapRight > 0
+            ? 'Gaps around window: top ${f(i.gapTop)}, bottom ${f(i.gapBottom)}, left ${f(i.gapLeft)}, right ${f(i.gapRight)}'
+            : 'Gaps around window: none',
+      )
       ..writeln('Columns: left ${f(i.left)}, right ${f(i.right)}')
       ..writeln('Bars: top ${f(i.top)}, bottom ${f(i.bottom)}')
       ..writeln('Toe kick: ${i.onFloor ? f(i.toeKick) : 'none'}')
