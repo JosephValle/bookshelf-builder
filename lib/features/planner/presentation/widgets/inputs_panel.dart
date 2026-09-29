@@ -2,7 +2,9 @@ import 'package:bookshelf_builder/app/theme/space.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/input_ranges.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/inputs.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/sides.dart';
 import 'package:bookshelf_builder/features/planner/presentation/widgets/dim_field.dart';
+import 'package:bookshelf_builder/features/planner/presentation/widgets/four_side_inputs.dart';
 import 'package:bookshelf_builder/features/planner/presentation/widgets/preset_chips.dart';
 import 'package:bookshelf_builder/features/planner/presentation/widgets/section_heading.dart';
 import 'package:bookshelf_builder/features/planner/presentation/widgets/wall_inputs.dart';
@@ -54,38 +56,49 @@ class InputsPanel extends StatelessWidget {
           max: InputRanges.windowHMax,
           onChanged: (v) => onChanged(inputs.copyWith(windowH: v)),
         ),
-        const SectionHeading('Gap around the window'),
-        DimField(
-          label: 'Gap above',
-          value: inputs.gapTop,
-          min: InputRanges.gapMin,
-          max: InputRanges.gapMax,
-          allowZero: true,
-          onChanged: (v) => onChanged(inputs.copyWith(gapTop: v)),
+        ExpansionTile(
+          key: const ValueKey('trim-tile'),
+          tilePadding: EdgeInsets.zero,
+          initiallyExpanded: inputs.trim != const Sides(),
+          title: const Text('Window trim (optional)'),
+          children: [
+            FourSideInputs(
+              name: 'trim',
+              sides: inputs.trim,
+              min: InputRanges.trimMin,
+              max: InputRanges.trimMax,
+              onChanged: (v) => onChanged(
+                inputs.copyWith(
+                  trimTop: v.top,
+                  trimBottom: v.bottom,
+                  trimLeft: v.left,
+                  trimRight: v.right,
+                ),
+              ),
+            ),
+          ],
         ),
-        DimField(
-          label: 'Gap below',
-          value: inputs.gapBottom,
-          min: InputRanges.gapMin,
-          max: InputRanges.gapMax,
-          allowZero: true,
-          onChanged: (v) => onChanged(inputs.copyWith(gapBottom: v)),
-        ),
-        DimField(
-          label: 'Gap left',
-          value: inputs.gapLeft,
-          min: InputRanges.gapMin,
-          max: InputRanges.gapMax,
-          allowZero: true,
-          onChanged: (v) => onChanged(inputs.copyWith(gapLeft: v)),
-        ),
-        DimField(
-          label: 'Gap right',
-          value: inputs.gapRight,
-          min: InputRanges.gapMin,
-          max: InputRanges.gapMax,
-          allowZero: true,
-          onChanged: (v) => onChanged(inputs.copyWith(gapRight: v)),
+        ExpansionTile(
+          key: const ValueKey('gap-tile'),
+          tilePadding: EdgeInsets.zero,
+          initiallyExpanded: inputs.gap != const Sides(),
+          title: const Text('Gap around window (optional)'),
+          children: [
+            FourSideInputs(
+              name: 'gap',
+              sides: inputs.gap,
+              min: InputRanges.gapMin,
+              max: InputRanges.gapMax,
+              onChanged: (v) => onChanged(
+                inputs.copyWith(
+                  gapTop: v.top,
+                  gapBottom: v.bottom,
+                  gapLeft: v.left,
+                  gapRight: v.right,
+                ),
+              ),
+            ),
+          ],
         ),
         const SectionHeading('Columns and bars'),
         if (fillsWidth || fillsHeight)

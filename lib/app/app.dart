@@ -1,11 +1,15 @@
 import 'package:bookshelf_builder/app/theme/app_theme.dart';
 import 'package:bookshelf_builder/features/planner/data/services/printing_pdf_exporter.dart';
 import 'package:bookshelf_builder/features/planner/data/services/shared_preferences_inputs_store.dart';
+import 'package:bookshelf_builder/features/planner/data/services/shared_preferences_pane_layout_store.dart';
 import 'package:bookshelf_builder/features/planner/data/services/system_clipboard_writer.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/inputs.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/pane_widths.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/clipboard_writer.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/inputs_store.dart';
+import 'package:bookshelf_builder/features/planner/domain/services/pane_layout_store.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/pdf_exporter.dart';
+import 'package:bookshelf_builder/features/planner/presentation/cubit/pane_layout_cubit.dart';
 import 'package:bookshelf_builder/features/planner/presentation/cubit/planner_cubit.dart';
 import 'package:bookshelf_builder/features/planner/presentation/screens/planner_screen.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +24,8 @@ class ShelfPlannerApp extends StatelessWidget {
     this.pdfExporter = const PrintingPdfExporter(),
     this.store = const SharedPreferencesInputsStore(),
     this.initial = const Inputs(),
+    this.paneStore = const SharedPreferencesPaneLayoutStore(),
+    this.initialPanes = const PaneWidths(),
     super.key,
   });
 
@@ -32,18 +38,32 @@ class ShelfPlannerApp extends StatelessWidget {
   /// Where the last inputs are saved.
   final InputsStore store;
 
+  /// Where the pane widths are saved.
+  final PaneLayoutStore paneStore;
+
+  /// Pane widths to start from (the saved ones, loaded before the app starts).
+  final PaneWidths initialPanes;
+
   /// Inputs to start from (the saved ones, loaded before the app starts).
   final Inputs initial;
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => PlannerCubit(
-        clipboard: clipboard,
-        pdfExporter: pdfExporter,
-        store: store,
-        initial: initial,
-      ),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => PlannerCubit(
+            clipboard: clipboard,
+            pdfExporter: pdfExporter,
+            store: store,
+            initial: initial,
+          ),
+        ),
+        BlocProvider(
+          create: (_) =>
+              PaneLayoutCubit(store: paneStore, initial: initialPanes),
+        ),
+      ],
       child: MaterialApp(
         title: 'Shelf Planner',
         debugShowCheckedModeBanner: false,

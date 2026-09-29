@@ -19,6 +19,20 @@ void main() {
       expect(find.text('Qty'), findsOneWidget);
     });
 
+    testWidgets('shows the piece ids so parts can be matched to the guide', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: CutListTable(plan: planFor())),
+        ),
+      );
+      expect(find.text('Piece'), findsOneWidget);
+      expect(find.text('A1'), findsOneWidget);
+      expect(find.text('A2'), findsOneWidget);
+      expect(find.text('B1-B2'), findsOneWidget);
+    });
+
     testWidgets('shows edge band in feet', (tester) async {
       await tester.pumpWidget(
         MaterialApp(

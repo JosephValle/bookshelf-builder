@@ -7,6 +7,7 @@ import 'package:bookshelf_builder/features/planner/domain/models/inputs.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/limits.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/part.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
+import 'package:bookshelf_builder/features/planner/domain/services/part_labeler.dart';
 
 /// Builds the cut list from the column and bar plans.
 class PartsBuilder {
@@ -22,9 +23,20 @@ class PartsBuilder {
   /// Name of the solid anchor cleat inside the bottom bar (off the floor only).
   static const String bottomCleatName = 'Bottom bar anchor cleat';
 
+  /// Name of the wall-side French cleat strips screwed into the studs.
+  static const String wallCleatName = 'Wall French cleat';
+
+  /// Name of the unit-side French cleat strips screwed to the back of the
+  /// unit. They are the mating half of [wallCleatName].
+  static const String unitCleatName = 'Unit French cleat';
+
   /// True for parts ripped to a narrow width instead of the panel depth.
   static bool isNarrowStrip(String name) =>
-      name == toeKickName || name == topCleatName || name == bottomCleatName;
+      name == toeKickName ||
+      name == topCleatName ||
+      name == bottomCleatName ||
+      name == wallCleatName ||
+      name == unitCleatName;
 
   /// Builds every part, including the optional toe kick and edge band.
   List<Part> build({
@@ -44,7 +56,23 @@ class PartsBuilder {
       double width,
       PartMaterial material,
     ) {
-      if (qty > 0) parts.add(Part(name, qty, length, width, material));
+      if (qty <= 0) return;
+      // A 3/4" part longer than a sheet is cut in equal pieces and spliced.
+      if (material == PartMaterial.ply34 && length > Limits.sheetL + 1e-9) {
+        final pieces = (length / Limits.sheetL).ceil();
+        parts.add(
+          Part(
+            name,
+            qty * pieces,
+            length / pieces,
+            width,
+            material,
+            splicedFrom: length,
+          ),
+        );
+        return;
+      }
+      parts.add(Part(name, qty, length, width, material));
     }
 
     const p34 = PartMaterial.ply34;
@@ -98,6 +126,12 @@ class PartsBuilder {
         p34,
       );
     }
+    // One strip at the top and one at mid-height on each column, ripped
+    // together so the narrow-strip estimate does not count each as full length.
+    // The wall half and the unit half are a matched pair, so both are listed.
+    final cleatRun = 2 * (inputs.left + inputs.right);
+    add(wallCleatName, 1, cleatRun, Limits.anchorCleatW, p34);
+    add(unitCleatName, 1, cleatRun, Limits.anchorCleatW, p34);
     const p14 = PartMaterial.ply14;
     add('Back panel, left column', 1, dims.ringH, inputs.left, p14);
     add('Back panel, right column', 1, dims.ringH, inputs.right, p14);
@@ -116,6 +150,6 @@ class PartsBuilder {
         Part('Front edge band (total)', 1, edge, 0, PartMaterial.edgeBand),
       );
     }
-    return parts;
+    return const PartLabeler().label(parts);
   }
 }

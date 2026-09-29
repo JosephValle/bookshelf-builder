@@ -46,7 +46,7 @@ class PlannerCubit extends Cubit<PlannerState> {
 
   /// Restores the default inputs and forgets the saved copy.
   void reset() {
-    const defaults = Inputs();
+    const defaults = Inputs.home;
     emit(PlannerState(inputs: defaults, plan: _engine.compute(defaults)));
     unawaited(_store.clear());
   }

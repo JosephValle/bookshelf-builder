@@ -47,7 +47,7 @@ app.*.map.json
 # Widget Preview related
 .widget_preview/
 
-# Local assistant tooling and build-instruction files (not part of the project)
+# Local-only files
 .claude/
 CLAUDE.md
 shelf_planner_spec.md

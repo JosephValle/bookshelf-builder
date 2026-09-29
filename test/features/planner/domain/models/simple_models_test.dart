@@ -1,7 +1,15 @@
+import 'package:bookshelf_builder/features/planner/domain/models/assembly_diagram.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/assembly_step.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/bar_plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/bay.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/box.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/column_plan.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/diagram_arrow.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/diagram_dimension.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/diagram_mark.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/diagram_mark_kind.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/diagram_piece.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/diagram_point.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/part.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/sheet_plan.dart';
@@ -73,4 +81,43 @@ void main() {
       );
     },
   );
+
+  test('the diagram models have value equality', () {
+    const a = AssemblyDiagram(
+      caption: 'c',
+      width: 1,
+      height: 2,
+      shapes: [],
+      arrows: [DiagramArrow(DiagramPoint(0, 0), DiagramPoint(1, 1))],
+      marks: [DiagramMark(DiagramPoint(1, 1))],
+      dimensions: [
+        DiagramDimension(DiagramPoint(0, 0), DiagramPoint(1, 0), '1"'),
+      ],
+      pieces: [DiagramPiece('A1', 1, 'top')],
+    );
+    const b = AssemblyDiagram(
+      caption: 'c',
+      width: 1,
+      height: 2,
+      shapes: [],
+      arrows: [DiagramArrow(DiagramPoint(0, 0), DiagramPoint(1, 1))],
+      marks: [DiagramMark(DiagramPoint(1, 1))],
+      dimensions: [
+        DiagramDimension(DiagramPoint(0, 0), DiagramPoint(1, 0), '1"'),
+      ],
+      pieces: [DiagramPiece('A1', 1, 'top')],
+    );
+    expect(a, b);
+    expect(a.withPieces(const []), isNot(b));
+    expect(a.withPieces(const []).caption, 'c');
+    expect(
+      const DiagramMark(DiagramPoint(1, 1)),
+      isNot(const DiagramMark(DiagramPoint(1, 1), kind: DiagramMarkKind.nail)),
+    );
+    expect(
+      const AssemblyStep('t', ['d'], diagrams: [a]),
+      const AssemblyStep('t', ['d'], diagrams: [b]),
+    );
+    expect(const AssemblyStep('t', ['d']).diagrams, isEmpty);
+  });
 }

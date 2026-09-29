@@ -1,12 +1,24 @@
-import 'package:equatable/equatable.dart';
-
 import 'package:bookshelf_builder/features/planner/domain/models/sides.dart';
+import 'package:equatable/equatable.dart';
 
 /// Every value the user can change. Immutable; use [copyWith] to derive edits.
 ///
 /// All lengths are in inches. The defaults describe a 48" square window with
 /// 14" columns and bars on a 3.5" toe kick.
 class Inputs extends Equatable {
+  /// The layout the app starts with: a 51 3/4" by 38" window, 57" from the
+  /// left of a 140" by 96" wall and 42" off the floor, with 4" kept clear at
+  /// the ceiling for a leaning book ladder.
+  static const home = Inputs(
+    windowW: 51.75,
+    windowH: 38,
+    wallW: 140,
+    wallH: 96,
+    wallMarginTop: 4,
+    windowFromWallLeft: 57,
+    windowFromFloor: 42,
+  );
+
   /// Creates inputs, defaulting to the standard starting layout.
   const Inputs({
     this.windowW = 48,
@@ -331,6 +343,18 @@ class Inputs extends Equatable {
     fillWall,
     wallW,
     wallH,
+    wallMarginTop,
+    wallMarginLeft,
+    wallMarginRight,
     windowFromWallLeft,
+    windowFromFloor,
+    trimTop,
+    trimBottom,
+    trimLeft,
+    trimRight,
+    gapTop,
+    gapBottom,
+    gapLeft,
+    gapRight,
   ];
 }

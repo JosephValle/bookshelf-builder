@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:bookshelf_builder/app/theme/app_colors.dart';
+import 'package:bookshelf_builder/features/planner/data/services/pdf_diagram.dart';
+import 'package:bookshelf_builder/features/planner/data/services/pdf_material_sections.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/box.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
@@ -17,6 +19,8 @@ class PdfDocumentBuilder {
   const PdfDocumentBuilder({
     this.formatter = const InchesFormatter(),
     this.guide = const AssemblyGuideBuilder(),
+    this.sections = const PdfMaterialSections(),
+    this.compress = true,
   });
 
   /// Inch formatting used throughout the document.
@@ -24,6 +28,13 @@ class PdfDocumentBuilder {
 
   /// Writes the assembly guide section.
   final AssemblyGuideBuilder guide;
+
+  /// Builds the styled materials cards.
+  final PdfMaterialSections sections;
+
+  /// Whether to compress the PDF streams. Tests turn it off so the text can
+  /// be searched.
+  final bool compress;
 
   static const double _drawingMaxW = 460;
   static const double _drawingMaxH = 400;
@@ -33,15 +44,16 @@ class PdfDocumentBuilder {
 
   /// Returns the bytes of the finished PDF.
   Future<Uint8List> build(Plan plan) async {
-    final doc = pw.Document();
+    final doc = pw.Document(compress: compress);
     final f = formatter.format;
     final i = plan.inputs;
     const heading = pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold);
 
     final rows = <List<String>>[
-      ['Part', 'Qty', 'Length', 'Width', 'Material'],
+      ['Piece', 'Part', 'Qty', 'Length', 'Width', 'Material'],
       for (final p in plan.parts)
         [
+          p.idRange,
           p.name,
           '${p.qty}',
           formatter.partLength(p),
@@ -81,19 +93,8 @@ class PdfDocumentBuilder {
           pw.SizedBox(height: 16),
           pw.Text('Materials', style: heading),
           pw.SizedBox(height: 6),
-          pw.Text(
-            '3/4" plywood: ${plan.sheets.sheets34} sheets (${plan.sheets.neededStrips} strips of ${f(plan.depthPanel)}, ${plan.sheets.stripsPerSheet} per sheet)',
-          ),
-          pw.Text(
-            '1/4" plywood: ${plan.sheets.backSheets} sheets (approximate)',
-          ),
-          if (i.edgeStiffener)
-            pw.Text(
-              'Front edge band: ${(plan.edgeBandInches / 12).toStringAsFixed(1)} linear feet',
-            ),
-          pw.SizedBox(height: 6),
-          pw.Text(PlannerNotes.store),
-          pw.SizedBox(height: 16),
+          ...sections.all(plan),
+          pw.SizedBox(height: 10),
           pw.Text('Assembly guide', style: heading),
           pw.SizedBox(height: 6),
           ..._assembly(plan),
@@ -102,10 +103,6 @@ class PdfDocumentBuilder {
           pw.SizedBox(height: 6),
           if (plan.issues.isEmpty) pw.Text('None'),
           for (final issue in plan.issues) pw.Bullet(text: issue.message),
-          pw.SizedBox(height: 16),
-          pw.Text('Wall attachment', style: heading),
-          pw.SizedBox(height: 6),
-          pw.Text(PlannerNotes.wall),
           pw.SizedBox(height: 16),
           pw.Text(
             PlannerNotes.disclaimer,
@@ -134,6 +131,11 @@ class PdfDocumentBuilder {
                 ),
               ),
               for (final d in steps[n].details) pw.Bullet(text: d),
+              for (final diagram in steps[n].diagrams)
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(top: 6),
+                  child: PdfDiagram.build(diagram),
+                ),
             ],
           ),
         ),

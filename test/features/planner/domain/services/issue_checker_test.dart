@@ -76,9 +76,9 @@ void main() {
       expect(has(p.issues, Severity.warning, 'minimum clear width'), isTrue);
     });
 
-    test('parts longer than a sheet warn', () {
+    test('parts longer than a sheet are spliced with a note', () {
       final p = planFor(const Inputs(windowH: 96));
-      expect(has(p.issues, Severity.warning, 'spliced'), isTrue);
+      expect(has(p.issues, Severity.note, 'spliced'), isTrue);
     });
 
     test('a ring wider than the wall is an error without fill', () {
@@ -154,7 +154,9 @@ void main() {
     });
 
     test('a top margin reduces the height available', () {
-      final p = planFor(const Inputs(wallH: 80, wallMarginTop: 6, fillWall: false));
+      final p = planFor(
+        const Inputs(wallH: 80, wallMarginTop: 6, fillWall: false),
+      );
       expect(
         has(p.issues, Severity.error, 'available under the top margin'),
         isTrue,
@@ -162,12 +164,16 @@ void main() {
     });
 
     test('a top margin that leaves room is fine', () {
-      final p = planFor(const Inputs(wallH: 96, wallMarginTop: 6, fillWall: false));
+      final p = planFor(
+        const Inputs(wallH: 96, wallMarginTop: 6, fillWall: false),
+      );
       expect(p.issues, isEmpty);
     });
 
     test('a tight top margin warns about clearance', () {
-      final p = planFor(const Inputs(wallH: 82, wallMarginTop: 6, fillWall: false));
+      final p = planFor(
+        const Inputs(wallH: 82, wallMarginTop: 6, fillWall: false),
+      );
       expect(
         has(p.issues, Severity.warning, 'Clearance under the top margin'),
         isTrue,

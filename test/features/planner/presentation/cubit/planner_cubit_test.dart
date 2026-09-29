@@ -80,7 +80,7 @@ void main() {
         c.update((i) => i.copyWith(left: 20));
         c.reset();
       },
-      verify: (c) => expect(c.state.inputs, const Inputs()),
+      verify: (c) => expect(c.state.inputs, Inputs.home),
     );
   });
 
@@ -117,7 +117,7 @@ void main() {
         ),
       );
       cubit.reset();
-      expect(cubit.state.inputs, const Inputs());
+      expect(cubit.state.inputs, Inputs.home);
       expect(store.clears, 1);
       expect(store.saved, isNull);
     });
@@ -125,7 +125,7 @@ void main() {
     test('reset also works from the defaults', () {
       final cubit = build();
       cubit.reset();
-      expect(cubit.state.inputs, const Inputs());
+      expect(cubit.state.inputs, Inputs.home);
       expect(store.clears, 1);
     });
 
@@ -142,7 +142,7 @@ void main() {
     test('copyCsv writes the CSV and posts a notice', () async {
       final cubit = build();
       await cubit.copyCsv();
-      expect(clipboard.writes.single, startsWith('Part,Qty,Length'));
+      expect(clipboard.writes.single, startsWith('Piece,Part,Qty,Length'));
       expect(cubit.state.notice, 'Cut list copied as CSV');
       expect(cubit.state.noticeId, 1);
     });

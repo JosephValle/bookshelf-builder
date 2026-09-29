@@ -11,7 +11,7 @@ void main() {
     test('starts with the header row', () {
       expect(
         builder.build(planFor()).split('\n').first,
-        'Part,Qty,Length,Width,Material',
+        'Piece,Part,Qty,Length,Width,Material',
       );
     });
 
@@ -24,7 +24,7 @@ void main() {
     test('formats a known row and escapes inch marks', () {
       expect(
         builder.build(planFor()),
-        contains('"Top panel",1,"76""","11 1/16""","3/4"" plywood"'),
+        contains('"A1","Top panel",1,"76""","11 1/16""","3/4"" plywood"'),
       );
     });
 

@@ -113,10 +113,7 @@ void main() {
         find.widgetWithText(TextField, 'Left column'),
       );
       expect(field.enabled, isTrue);
-      expect(
-        find.textContaining('Sizes come from the wall'),
-        findsNothing,
-      );
+      expect(find.textContaining('Sizes come from the wall'), findsNothing);
     });
 
     testWidgets(
@@ -128,10 +125,7 @@ void main() {
         );
         expect(left.enabled, isFalse);
         expect(left.controller!.text, '36');
-        expect(
-          find.textContaining('Sizes come from the wall'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('Sizes come from the wall'), findsOneWidget);
       },
     );
 

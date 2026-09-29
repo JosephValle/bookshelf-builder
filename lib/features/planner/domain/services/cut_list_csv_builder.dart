@@ -12,13 +12,14 @@ class CutListCsvBuilder {
 
   /// Returns a header row followed by one row per part.
   String build(Plan plan) {
-    final b = StringBuffer('Part,Qty,Length,Width,Material\n');
+    final b = StringBuffer('Piece,Part,Qty,Length,Width,Material\n');
     for (final p in plan.parts) {
       final width = p.material == PartMaterial.edgeBand
           ? ''
           : formatter.format(p.width);
       b.writeln(
         [
+          _quote(p.idRange),
           _quote(p.name),
           '${p.qty}',
           _quote(formatter.partLength(p)),

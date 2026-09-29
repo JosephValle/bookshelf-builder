@@ -14,9 +14,10 @@ class PlannerNotes {
 
   /// How to attach the finished unit to the wall.
   static const String wall =
-      'Attach with a continuous 3/4" plywood French cleat screwed into studs '
-      '(studs every 16 in on center), one at the top and one at mid-height on '
-      'each column, and anchor the unit against tipping. Drive the anchors '
+      'Attach with a 3/4" plywood French cleat: one half screwed into studs '
+      '(studs every 16 in on center) and the matching half fastened to the '
+      'back of the unit, one row at the top and one at mid-height on '
+      'each column. Anchor the unit against tipping. Drive the anchors '
       'through the solid plywood anchor cleat inside the bar over the window '
       '(glued to the bar skins and webs), never through the 1/4" back panel '
       'alone.';

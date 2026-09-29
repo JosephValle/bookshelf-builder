@@ -2,11 +2,8 @@
 class Sizes {
   const Sizes._();
 
-  /// Width of the inputs column in the wide layout.
-  static const double inputsPanelWidth = 320;
-
-  /// Width of the results column in the wide layout.
-  static const double resultsPanelWidth = 360;
+  /// Width of the draggable divider between panes.
+  static const double paneDivider = 12;
 
   /// Height of the drawing in the narrow layout.
   static const double narrowDrawingHeight = 420;
@@ -30,5 +27,5 @@ class Sizes {
   static const double minLabelBayH = 24;
 
   /// Width of a text field next to its slider.
-  static const double fieldWidth = 96;
+  static const double fieldWidth = 128;
 }

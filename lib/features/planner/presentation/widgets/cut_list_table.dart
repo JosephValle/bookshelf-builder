@@ -4,7 +4,8 @@ import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/inches_formatter.dart';
 import 'package:flutter/material.dart';
 
-/// The cut list as a table: part, quantity, length, width and material.
+/// The cut list as a table: piece ids, part, quantity, length, width and
+/// material.
 class CutListTable extends StatelessWidget {
   /// Creates the table for [plan].
   const CutListTable({required this.plan, super.key});
@@ -22,6 +23,7 @@ class CutListTable extends StatelessWidget {
         child: DataTable(
           columnSpacing: Space.lg,
           columns: const [
+            DataColumn(label: Text('Piece')),
             DataColumn(label: Text('Part')),
             DataColumn(label: Text('Qty'), numeric: true),
             DataColumn(label: Text('Length')),
@@ -32,6 +34,7 @@ class CutListTable extends StatelessWidget {
             for (final p in plan.parts)
               DataRow(
                 cells: [
+                  DataCell(Text(p.idRange)),
                   DataCell(Text(p.name)),
                   DataCell(Text('${p.qty}')),
                   DataCell(Text(f.partLength(p))),

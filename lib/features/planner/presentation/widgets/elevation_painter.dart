@@ -133,59 +133,59 @@ class ElevationPainter extends CustomPainter {
 
     final geo = plan.geometry;
     final opening = rect(geo.openingBox);
+    final trim = rect(geo.trimBox);
+    final win = rect(geo.windowBox);
     canvas.drawRect(opening, Paint()..color = AppColors.gap);
     _hatch(canvas, opening, AppColors.windowInk.withValues(alpha: 0.35));
-    canvas.drawRect(rect(geo.windowBox), Paint()..color = AppColors.window);
-    final gaps = <(double, Rect)>[
-      (
-        i.gapTop,
-        Rect.fromLTRB(
-          opening.left,
-          opening.top,
-          opening.right,
-          rect(geo.windowBox).top,
-        ),
-      ),
-      (
-        i.gapBottom,
-        Rect.fromLTRB(
-          opening.left,
-          rect(geo.windowBox).bottom,
-          opening.right,
-          opening.bottom,
-        ),
-      ),
-      (
-        i.gapLeft,
-        Rect.fromLTRB(
-          opening.left,
-          opening.top,
-          rect(geo.windowBox).left,
-          opening.bottom,
-        ),
-      ),
-      (
-        i.gapRight,
-        Rect.fromLTRB(
-          rect(geo.windowBox).right,
-          opening.top,
-          opening.right,
-          opening.bottom,
-        ),
-      ),
-    ];
-    for (final g in gaps) {
-      if (g.$1 > 0 && g.$2.width > 26 && g.$2.height > 12) {
+    canvas
+      ..drawRect(trim, Paint()..color = AppColors.trim)
+      ..drawRect(
+        trim,
+        Paint()
+          ..color = ink.withValues(alpha: 0.6)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = Strokes.panelEdge,
+      )
+      ..drawRect(win, Paint()..color = AppColors.window);
+    void band(double value, Rect zone) {
+      if (value > 0 && zone.width > 26 && zone.height > 12) {
         _text(
           canvas,
-          _fmt.plain(g.$1),
-          g.$2.center,
+          _fmt.plain(value),
+          zone.center,
           size: AppType.drawingBay,
           color: AppColors.windowInk,
           plate: true,
         );
       }
     }
+
+    band(
+      i.gapTop,
+      Rect.fromLTRB(opening.left, opening.top, opening.right, trim.top),
+    );
+    band(
+      i.gapBottom,
+      Rect.fromLTRB(opening.left, trim.bottom, opening.right, opening.bottom),
+    );
+    band(
+      i.gapLeft,
+      Rect.fromLTRB(opening.left, trim.top, trim.left, trim.bottom),
+    );
+    band(
+      i.gapRight,
+      Rect.fromLTRB(trim.right, trim.top, opening.right, trim.bottom),
+    );
+    band(i.trimTop, Rect.fromLTRB(trim.left, trim.top, trim.right, win.top));
+    band(
+      i.trimBottom,
+      Rect.fromLTRB(trim.left, win.bottom, trim.right, trim.bottom),
+    );
+    band(i.trimLeft, Rect.fromLTRB(trim.left, win.top, win.left, win.bottom));
+    band(
+      i.trimRight,
+      Rect.fromLTRB(win.right, win.top, trim.right, win.bottom),
+    );
 
     final wood = Paint()..color = AppColors.wood;
     final edge = Paint()

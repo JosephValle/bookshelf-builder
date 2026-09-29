@@ -46,6 +46,43 @@ void main() {
       );
     });
 
+    test('draws trim, gaps and wall margins together', () {
+      paintOnce(
+        painter(
+          const Inputs(
+            wallW: 120,
+            wallH: 96,
+            wallMarginLeft: 8,
+            wallMarginRight: 8,
+            wallMarginTop: 6,
+            trimTop: 2,
+            trimLeft: 2,
+            trimRight: 2,
+            trimBottom: 2,
+            gapTop: 1,
+            gapLeft: 1,
+            gapRight: 1,
+            gapBottom: 1,
+          ),
+        ),
+        const Size(900, 700),
+      );
+    });
+
+    test('draws wall margins without a wall height', () {
+      paintOnce(
+        painter(const Inputs(wallW: 120, wallMarginLeft: 8)),
+        const Size(800, 600),
+      );
+    });
+
+    test('draws a top margin without a wall width', () {
+      paintOnce(
+        painter(const Inputs(wallH: 96, wallMarginTop: 6)),
+        const Size(800, 600),
+      );
+    });
+
     test('survives tiny and degenerate canvases', () {
       paintOnce(painter(const Inputs()), const Size(50, 50));
       paintOnce(painter(const Inputs()), Size.zero);

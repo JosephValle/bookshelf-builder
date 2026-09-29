@@ -65,6 +65,24 @@ void main() {
       expect(cleat.material, PartMaterial.ply34);
     });
 
+    test('wall French cleat covers a top and mid-height row per column', () {
+      final cleat = named(parts, PartsBuilder.wallCleatName);
+      expect(cleat.qty, 1);
+      expect(cleat.length, 2 * (14 + 14));
+      expect(cleat.width, 3.5);
+      expect(cleat.material, PartMaterial.ply34);
+      expect(PartsBuilder.isNarrowStrip(PartsBuilder.wallCleatName), isTrue);
+    });
+
+    test('the unit half of the French cleat matches the wall half', () {
+      final wall = named(parts, PartsBuilder.wallCleatName);
+      final unit = named(parts, PartsBuilder.unitCleatName);
+      expect(unit.qty, wall.qty);
+      expect(unit.length, wall.length);
+      expect(unit.width, wall.width);
+      expect(PartsBuilder.isNarrowStrip(PartsBuilder.unitCleatName), isTrue);
+    });
+
     test('no bottom cleat when resting on the floor', () {
       expect(parts.any((p) => p.name == PartsBuilder.bottomCleatName), isFalse);
     });

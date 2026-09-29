@@ -76,11 +76,17 @@ class IssueChecker {
       );
     }
     for (final p in parts) {
-      if (p.material != PartMaterial.edgeBand &&
+      if (p.isSpliced) {
+        final pieces = (p.splicedFrom / Limits.sheetL).ceil();
+        add(
+          Severity.note,
+          '${p.name} is ${f(p.splicedFrom)} long, over the ${f(Limits.sheetL)} sheet length, so it is cut as $pieces pieces of ${f(p.length)} and spliced. Glue each seam over a 12" backer strip screwed to the back edge, and keep seams away from the top and bottom panel seams in the opposite panel.',
+        );
+      } else if (p.material != PartMaterial.edgeBand &&
           p.length > Limits.sheetL + 1e-9) {
         add(
           Severity.warning,
-          '${p.name} is ${f(p.length)} long, over the ${f(Limits.sheetL)} sheet length. Reduce ring height or plan a spliced part.',
+          '${p.name} is ${f(p.length)} long, over the ${f(Limits.sheetL)} sheet length.',
         );
       }
     }
