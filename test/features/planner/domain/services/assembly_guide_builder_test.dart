@@ -2,6 +2,8 @@ import 'package:bookshelf_builder/features/planner/domain/models/assembly_step.d
 import 'package:bookshelf_builder/features/planner/domain/models/inputs.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/assembly_guide_builder.dart';
+import 'package:bookshelf_builder/features/planner/domain/services/parts_builder.dart';
+import 'package:bookshelf_builder/features/planner/domain/services/piece_ids.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/plan_helpers.dart';
@@ -353,7 +355,10 @@ void main() {
       expect(starting(steps(), 'Mount: screw wall piece').length, 4);
       final text = textOf(steps()[make]);
       expect(text, contains('45 degrees'));
-      expect(text, contains('14", 14", 14" and 14"'));
+      final p = planFor();
+      final wallLeft = PieceIds(p).ids(PartsBuilder.wallCleatLeftName);
+      expect(text, contains(wallLeft.first));
+      expect(text, contains('for the left column (14" long)'));
     });
 
     test('the unit cleat is centered on a shelf with a height', () {
@@ -640,13 +645,19 @@ void main() {
     test('every strip lists its pieces and crosscut marks', () {
       final text = textOf(cuts.first);
       expect(text, contains('Strip 1 (11 1/16" wide): A1 76", D1 12 9/16"'));
-      expect(text, contains('Crosscut marks from the left end: 76", 88 11/16"'));
+      expect(
+        text,
+        contains('Crosscut marks from the left end: 76", 88 11/16"'),
+      );
     });
 
     test('a legend gives the size of every part on the sheet', () {
       final text = textOf(cuts.first);
       expect(text, contains('A1 top panel: 76" by 11 1/16"'));
-      expect(text, contains('D1 to D4 left column shelf: 12 9/16" by 11 1/16"'));
+      expect(
+        text,
+        contains('D1 to D4 left column shelf: 12 9/16" by 11 1/16"'),
+      );
     });
 
     test('ids that do not run in order are listed one by one', () {
@@ -687,6 +698,72 @@ void main() {
         cuts.where((e) => e.title.contains('1/4"')).length,
         p.sheets.backSheets,
       );
+    });
+  });
+
+  group('French cleat pieces', () {
+    test('the guide names the real cleat pieces, one step each', () {
+      final p = planFor();
+      final s = builder.build(p);
+      final ids = PieceIds(p);
+      for (var k = 0; k < 4; k++) {
+        expect(
+          hasStep(
+            s,
+            'French cleat: fasten unit piece ${ids.cleat(k, wall: false)} to the ${k < 2 ? 'left' : 'right'} column',
+          ),
+          isTrue,
+          reason: 'unit piece $k',
+        );
+        expect(
+          hasStep(
+            s,
+            'Mount: screw wall piece ${ids.cleat(k, wall: true)} to the wall',
+          ),
+          isTrue,
+          reason: 'wall piece $k',
+        );
+      }
+    });
+
+    test('no old lettered sub-piece names are left for the cleats', () {
+      for (final inputs in [const Inputs(), Inputs.home]) {
+        final p = planFor(inputs);
+        final ids = PieceIds(p);
+        final text = allText(builder.build(p));
+        for (var k = 0; k < 4; k++) {
+          for (final wall in [true, false]) {
+            final id = ids.cleat(k, wall: wall);
+            expect(
+              RegExp('\\b$id[a-d]\\b').hasMatch(text),
+              isFalse,
+              reason: '$id is written with a letter suffix',
+            );
+          }
+        }
+      }
+    });
+
+    test('a wide column gets pieces cut to its own width', () {
+      final p = planFor(Inputs.home);
+      final text = allText(builder.build(p));
+      expect(text, contains('for the left column (57" long)'));
+      expect(text, contains('for the right column (31 1/4" long)'));
+    });
+
+    test('every cleat piece is on a sheet in the cutting steps', () {
+      final p = planFor(Inputs.home);
+      final ids = PieceIds(p);
+      final cuts = builder
+          .build(p)
+          .where((e) => e.title.startsWith('Cut '))
+          .map(textOf)
+          .join('\n');
+      for (var k = 0; k < 4; k++) {
+        for (final wall in [true, false]) {
+          expect(cuts, contains(ids.cleat(k, wall: wall)));
+        }
+      }
     });
   });
 }

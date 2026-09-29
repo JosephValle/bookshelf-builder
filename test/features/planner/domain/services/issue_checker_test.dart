@@ -212,4 +212,22 @@ void main() {
       expect(has(p.issues, Severity.note, 'support plan'), isTrue);
     });
   });
+
+  group('back panels bigger than a sheet', () {
+    test('a column wider than a sheet gets a note about joining pieces', () {
+      final p = planFor(const Inputs(left: 57));
+      expect(has(p.issues, Severity.note, 'Back panel, left column'), isTrue);
+      expect(has(p.issues, Severity.note, 'cut in 2 equal pieces'), isTrue);
+      expect(has(p.issues, Severity.note, 'backer strip'), isTrue);
+    });
+
+    test('it is a note, not a warning about the sheet length', () {
+      final p = planFor(const Inputs(left: 57));
+      expect(has(p.issues, Severity.warning, 'Back panel'), isFalse);
+    });
+
+    test('a normal back has no note', () {
+      expect(has(planFor().issues, Severity.note, 'Back panel'), isFalse);
+    });
+  });
 }

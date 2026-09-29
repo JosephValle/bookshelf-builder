@@ -25,9 +25,20 @@ class PlannerScreen extends StatelessWidget {
     return BlocListener<PlannerCubit, PlannerState>(
       listenWhen: (a, b) => b.notice != null && a.noticeId != b.noticeId,
       listener: (context, state) {
+        final cubit = context.read<PlannerCubit>();
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(state.notice!)));
+          ..showSnackBar(
+            SnackBar(
+              content: Text(state.notice!),
+              action: state.savedPath == null
+                  ? null
+                  : SnackBarAction(
+                      label: 'Show in Finder',
+                      onPressed: cubit.revealSaved,
+                    ),
+            ),
+          );
       },
       child: Scaffold(
         appBar: AppBar(title: const Text('Shelf Planner')),
@@ -50,6 +61,7 @@ class PlannerScreen extends StatelessWidget {
               onCopyCsv: cubit.copyCsv,
               onCopySummary: cubit.copySummary,
               onExportPdf: cubit.exportPdf,
+              onSavePdf: cubit.canSavePdf ? cubit.savePdf : null,
             );
             return LayoutBuilder(
               builder: (context, box) {

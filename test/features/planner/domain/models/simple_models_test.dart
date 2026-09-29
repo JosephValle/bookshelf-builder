@@ -153,4 +153,24 @@ void main() {
     expect(const AssemblyStep('t', ['d'], checkpoint: true).checkpoint, isTrue);
     expect(const AssemblyStep('t', ['d']).checkpoint, isFalse);
   });
+
+  test('a dimension is dark by default and compares by value', () {
+    const a = DiagramDimension(DiagramPoint(0, 0), DiagramPoint(1, 0), '1"');
+    expect(a.light, isFalse);
+    expect(
+      a,
+      const DiagramDimension(DiagramPoint(0, 0), DiagramPoint(1, 0), '1"'),
+    );
+    expect(
+      a,
+      isNot(
+        const DiagramDimension(
+          DiagramPoint(0, 0),
+          DiagramPoint(1, 0),
+          '1"',
+          light: true,
+        ),
+      ),
+    );
+  });
 }

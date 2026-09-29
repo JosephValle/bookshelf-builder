@@ -45,7 +45,9 @@ void main() {
         ];
         expect(placed.toSet().length, placed.length);
         // A back bigger than a sheet is cut in pieces named J1a, J1b.
-        final whole = {for (final id in placed) id.replaceAll(RegExp('[a-z]\$'), '')};
+        final whole = {
+          for (final id in placed) id.replaceAll(RegExp('[a-z]\$'), ''),
+        };
         expect(whole, expected.toSet());
       });
 
@@ -199,7 +201,7 @@ void main() {
           for (var k = 0; k < 4; k++)
             Part('Wide $k', 1, 90, 11, PartMaterial.ply34).withLabel('W$k'),
           for (var k = 0; k < 3; k++)
-            Part(
+            const Part(
               'Toe kick',
               1,
               90,

@@ -23,4 +23,32 @@ void main() {
       expect(calls, ['csv', 'summary', 'pdf']);
     });
   });
+
+  group('ActionBar save button', () {
+    Future<void> pump(WidgetTester tester, {VoidCallback? onSavePdf}) =>
+        tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ActionBar(
+                onCopyCsv: () {},
+                onCopySummary: () {},
+                onExportPdf: () {},
+                onSavePdf: onSavePdf,
+              ),
+            ),
+          ),
+        );
+
+    testWidgets('is hidden when the platform cannot save', (tester) async {
+      await pump(tester);
+      expect(find.text('Save PDF'), findsNothing);
+    });
+
+    testWidgets('fires its callback when shown', (tester) async {
+      var saves = 0;
+      await pump(tester, onSavePdf: () => saves++);
+      await tester.tap(find.text('Save PDF'));
+      expect(saves, 1);
+    });
+  });
 }

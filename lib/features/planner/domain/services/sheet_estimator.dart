@@ -21,8 +21,8 @@ class SheetEstimator {
   /// Strip packing strategy.
   final StripPacker packer;
 
-  /// Lays the pieces out on sheets. The sheet counts never go below what the
-  /// layout the guide shows actually needs.
+  /// Lays the pieces out on sheets. The sheet counts are the number of sheets
+  /// in that layout, the same one the guide draws.
   final CutLayoutBuilder layout;
 
   /// Estimates 3/4" and 1/4" sheets for [parts].
@@ -72,8 +72,9 @@ class SheetEstimator {
     final placed = layout.build(parts: parts, depthPanel: dims.depthPanel);
     final layout34 = placed.where((s) => s.material == PartMaterial.ply34);
     final layoutBacks = placed.where((s) => s.material == PartMaterial.ply14);
-    final formula34 = needed == 0 ? 0 : (needed / perSheet).ceil();
-    final sheets34 = max(formula34, layout34.length);
+    // The layout is a real arrangement of every piece, so its sheet count is
+    // both enough and the one the guide draws.
+    final sheets34 = layout34.length;
     final backSheets = layoutBacks.length;
     return SheetPlan(
       stripsPerSheet: perSheet,

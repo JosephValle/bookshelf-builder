@@ -84,8 +84,8 @@ class AssemblyDiagramBuilder {
   /// The wall half and the unit half of the French cleat, apart and hooked.
   AssemblyDiagram cleatPair(Plan plan) {
     final ids = PieceIds(plan);
-    final wall = ids.id(PartsBuilder.wallCleatName);
-    final unit = ids.id(PartsBuilder.unitCleatName);
+    final wall = ids.cleat(0, wall: true);
+    final unit = ids.cleat(0, wall: false);
     DiagramShape wallPiece(double x, {String l = ''}) => DiagramShape(
       [_p(x, 70), _p(x + 24, 46), _p(x + 24, 100), _p(x, 100)],
       label: l,
@@ -1078,8 +1078,7 @@ class AssemblyDiagramBuilder {
   /// (0 to 3) is being fixed.
   AssemblyDiagram unitCleat(Plan plan, {required int current}) {
     final ids = PieceIds(plan);
-    final base = ids.id(PartsBuilder.unitCleatName);
-    String sub(int i) => '$base${'abcd'[i]}';
+    String sub(int i) => ids.cleat(i, wall: false);
     final left = current < 2;
     return AssemblyDiagram(
       caption:
@@ -1117,10 +1116,7 @@ class AssemblyDiagramBuilder {
     required int piece,
   }) {
     final ids = PieceIds(plan);
-    final base = ids.id(
-      wall ? PartsBuilder.wallCleatName : PartsBuilder.unitCleatName,
-    );
-    final id = '$base${'abcd'[piece]}';
+    final id = ids.cleat(piece, wall: wall);
     final len = counter.cleatPieceLengths(plan)[piece];
     if (!wall) {
       final s = 230 / len;
@@ -1539,8 +1535,8 @@ class AssemblyDiagramBuilder {
   /// A side cut of the finished hang.
   AssemblyDiagram mount(Plan plan) {
     final ids = PieceIds(plan);
-    final wall = ids.id(PartsBuilder.wallCleatName);
-    final unit = ids.id(PartsBuilder.unitCleatName);
+    final wall = ids.cleat(0, wall: true);
+    final unit = ids.cleat(0, wall: false);
     return AssemblyDiagram(
       caption:
           'Side view of the unit hung on the cleat. The wall piece ($wall) '

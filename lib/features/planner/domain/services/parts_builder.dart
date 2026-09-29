@@ -23,20 +23,34 @@ class PartsBuilder {
   /// Name of the solid anchor cleat inside the bottom bar (off the floor only).
   static const String bottomCleatName = 'Bottom bar anchor cleat';
 
-  /// Name of the wall-side French cleat strips screwed into the studs.
-  static const String wallCleatName = 'Wall French cleat';
+  /// Name of the wall-side French cleat pieces for the left column: one for
+  /// the top row and one for the middle row.
+  static const String wallCleatLeftName = 'Wall French cleat, left column';
 
-  /// Name of the unit-side French cleat strips screwed to the back of the
-  /// unit. They are the mating half of [wallCleatName].
-  static const String unitCleatName = 'Unit French cleat';
+  /// Name of the wall-side French cleat pieces for the right column.
+  static const String wallCleatRightName = 'Wall French cleat, right column';
+
+  /// Name of the unit-side French cleat pieces for the left column. They are
+  /// the mating half of [wallCleatLeftName].
+  static const String unitCleatLeftName = 'Unit French cleat, left column';
+
+  /// Name of the unit-side French cleat pieces for the right column.
+  static const String unitCleatRightName = 'Unit French cleat, right column';
+
+  /// The part name of the French cleat pieces for one half and column.
+  static String cleatName({required bool wall, required bool left}) => wall
+      ? (left ? wallCleatLeftName : wallCleatRightName)
+      : (left ? unitCleatLeftName : unitCleatRightName);
 
   /// True for parts ripped to a narrow width instead of the panel depth.
   static bool isNarrowStrip(String name) =>
       name == toeKickName ||
       name == topCleatName ||
       name == bottomCleatName ||
-      name == wallCleatName ||
-      name == unitCleatName;
+      name == wallCleatLeftName ||
+      name == wallCleatRightName ||
+      name == unitCleatLeftName ||
+      name == unitCleatRightName;
 
   /// Builds every part, including the optional toe kick and edge band.
   List<Part> build({
@@ -126,12 +140,13 @@ class PartsBuilder {
         p34,
       );
     }
-    // One strip at the top and one at mid-height on each column, ripped
-    // together so the narrow-strip estimate does not count each as full length.
-    // The wall half and the unit half are a matched pair, so both are listed.
-    final cleatRun = 2 * (inputs.left + inputs.right);
-    add(wallCleatName, 1, cleatRun, Limits.anchorCleatW, p34);
-    add(unitCleatName, 1, cleatRun, Limits.anchorCleatW, p34);
+    // The French cleat is a matched pair. Each half has one piece for the top
+    // row and one for the middle row on each column, as long as the column is
+    // wide, so every piece is cut to its own length.
+    add(wallCleatLeftName, 2, inputs.left, Limits.anchorCleatW, p34);
+    add(wallCleatRightName, 2, inputs.right, Limits.anchorCleatW, p34);
+    add(unitCleatLeftName, 2, inputs.left, Limits.anchorCleatW, p34);
+    add(unitCleatRightName, 2, inputs.right, Limits.anchorCleatW, p34);
     const p14 = PartMaterial.ply14;
     add('Back panel, left column', 1, dims.ringH, inputs.left, p14);
     add('Back panel, right column', 1, dims.ringH, inputs.right, p14);

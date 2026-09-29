@@ -65,22 +65,59 @@ void main() {
       expect(cleat.material, PartMaterial.ply34);
     });
 
-    test('wall French cleat covers a top and mid-height row per column', () {
-      final cleat = named(parts, PartsBuilder.wallCleatName);
-      expect(cleat.qty, 1);
-      expect(cleat.length, 2 * (14 + 14));
-      expect(cleat.width, 3.5);
-      expect(cleat.material, PartMaterial.ply34);
-      expect(PartsBuilder.isNarrowStrip(PartsBuilder.wallCleatName), isTrue);
+    test('the wall half has a top and a middle piece for each column', () {
+      final left = named(parts, PartsBuilder.wallCleatLeftName);
+      final right = named(parts, PartsBuilder.wallCleatRightName);
+      expect(left.qty, 2);
+      expect(right.qty, 2);
+      expect(left.length, 14);
+      expect(right.length, 14);
+      expect(left.width, 3.5);
+      expect(left.material, PartMaterial.ply34);
+      expect(
+        PartsBuilder.isNarrowStrip(PartsBuilder.wallCleatLeftName),
+        isTrue,
+      );
+      expect(
+        PartsBuilder.isNarrowStrip(PartsBuilder.wallCleatRightName),
+        isTrue,
+      );
     });
 
     test('the unit half of the French cleat matches the wall half', () {
-      final wall = named(parts, PartsBuilder.wallCleatName);
-      final unit = named(parts, PartsBuilder.unitCleatName);
-      expect(unit.qty, wall.qty);
-      expect(unit.length, wall.length);
-      expect(unit.width, wall.width);
-      expect(PartsBuilder.isNarrowStrip(PartsBuilder.unitCleatName), isTrue);
+      for (final left in [true, false]) {
+        final wall = named(
+          parts,
+          PartsBuilder.cleatName(wall: true, left: left),
+        );
+        final unit = named(
+          parts,
+          PartsBuilder.cleatName(wall: false, left: left),
+        );
+        expect(unit.qty, wall.qty);
+        expect(unit.length, wall.length);
+        expect(unit.width, wall.width);
+        expect(PartsBuilder.isNarrowStrip(unit.name), isTrue);
+      }
+    });
+
+    test('each cleat piece is as long as the column it goes on', () {
+      final p = planFor(const Inputs(left: 40, right: 22));
+      expect(named(p.parts, PartsBuilder.wallCleatLeftName).length, 40);
+      expect(named(p.parts, PartsBuilder.wallCleatRightName).length, 22);
+      expect(named(p.parts, PartsBuilder.unitCleatLeftName).length, 40);
+      expect(named(p.parts, PartsBuilder.unitCleatRightName).length, 22);
+    });
+
+    test('a wide column never makes a cleat piece longer than a sheet', () {
+      // The old single strip was 2 x (left + right) and was spliced.
+      final p = planFor(Inputs.home);
+      for (final part in p.parts.where(
+        (x) => x.name.contains('French cleat'),
+      )) {
+        expect(part.isSpliced, isFalse, reason: part.name);
+        expect(part.length, lessThanOrEqualTo(96));
+      }
     });
 
     test('no bottom cleat when resting on the floor', () {

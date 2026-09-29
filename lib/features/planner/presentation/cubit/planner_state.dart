@@ -11,6 +11,7 @@ class PlannerState extends Equatable {
     required this.plan,
     this.notice,
     this.noticeId = 0,
+    this.savedPath,
   });
 
   /// Current inputs.
@@ -25,6 +26,10 @@ class PlannerState extends Equatable {
   /// Increments with every notice so identical messages still notify.
   final int noticeId;
 
+  /// Path of the PDF that was just saved, so the message can offer to show it
+  /// in the file manager, or null.
+  final String? savedPath;
+
   @override
-  List<Object?> get props => [inputs, plan, notice, noticeId];
+  List<Object?> get props => [inputs, plan, notice, noticeId, savedPath];
 }

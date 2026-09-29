@@ -191,4 +191,70 @@ void main() {
       expect(cubit.state.notice, isNull);
     });
   });
+
+  group('saving the PDF', () {
+    test('canSavePdf follows the exporter', () {
+      expect(build().canSavePdf, isTrue);
+      pdf.saveSupported = false;
+      expect(build().canSavePdf, isFalse);
+    });
+
+    test('savePdf saves the plan and offers to show the file', () async {
+      final cubit = build();
+      await cubit.savePdf();
+      expect(pdf.saved.single, cubit.state.plan);
+      expect(cubit.state.notice, 'PDF saved');
+      expect(cubit.state.savedPath, '/tmp/shelf_planner.pdf');
+      expect(cubit.state.noticeId, 1);
+    });
+
+    test('cancelling the save panel posts nothing', () async {
+      pdf.savePath = null;
+      final cubit = build();
+      await cubit.savePdf();
+      expect(cubit.state.notice, isNull);
+      expect(cubit.state.noticeId, 0);
+    });
+
+    test('a failed save becomes a notice without a file to show', () async {
+      pdf.fail = true;
+      final cubit = build();
+      await cubit.savePdf();
+      expect(cubit.state.notice, 'Could not save the PDF');
+      expect(cubit.state.savedPath, isNull);
+    });
+
+    test('revealSaved shows the file that was just saved', () async {
+      final cubit = build();
+      await cubit.savePdf();
+      await cubit.revealSaved();
+      expect(pdf.revealed, ['/tmp/shelf_planner.pdf']);
+    });
+
+    test('revealSaved does nothing before anything was saved', () async {
+      final cubit = build();
+      await cubit.revealSaved();
+      expect(pdf.revealed, isEmpty);
+      expect(cubit.state.notice, isNull);
+    });
+
+    test('a failing reveal becomes a notice', () async {
+      final cubit = build();
+      await cubit.savePdf();
+      pdf.fail = true;
+      await cubit.revealSaved();
+      expect(cubit.state.notice, 'Could not show the file');
+      expect(cubit.state.savedPath, isNull);
+    });
+
+    test('the saved path is part of the state', () {
+      final a = build().state;
+      final b = PlannerState(
+        inputs: a.inputs,
+        plan: a.plan,
+        savedPath: '/x.pdf',
+      );
+      expect(a, isNot(b));
+    });
+  });
 }

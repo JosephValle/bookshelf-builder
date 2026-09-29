@@ -1,13 +1,15 @@
 import 'package:bookshelf_builder/app/theme/space.dart';
 import 'package:flutter/material.dart';
 
-/// Buttons for copying the cut list and summary and exporting the PDF.
+/// Buttons for copying the cut list and summary, saving the PDF where the
+/// platform allows it, and exporting the PDF.
 class ActionBar extends StatelessWidget {
   /// Creates the bar.
   const ActionBar({
     required this.onCopyCsv,
     required this.onCopySummary,
     required this.onExportPdf,
+    this.onSavePdf,
     super.key,
   });
 
@@ -19,6 +21,10 @@ class ActionBar extends StatelessWidget {
 
   /// Export the printable PDF.
   final VoidCallback onExportPdf;
+
+  /// Save the PDF to a file and offer to show it in the file manager. Null
+  /// hides the button (the platform cannot do it).
+  final VoidCallback? onSavePdf;
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +44,12 @@ class ActionBar extends StatelessWidget {
             icon: const Icon(Icons.copy),
             label: const Text('Copy summary'),
           ),
+          if (onSavePdf != null)
+            OutlinedButton.icon(
+              onPressed: onSavePdf,
+              icon: const Icon(Icons.save_alt),
+              label: const Text('Save PDF'),
+            ),
           FilledButton.icon(
             onPressed: onExportPdf,
             icon: const Icon(Icons.picture_as_pdf),

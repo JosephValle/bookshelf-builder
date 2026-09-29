@@ -75,8 +75,6 @@ class AssemblyGuideBuilder {
 
     String plural(int count, String word) => count == 1 ? word : '${word}s';
     final cleatW = f(Limits.anchorCleatW);
-    final wallId = ids.id(PartsBuilder.wallCleatName);
-    final unitId = ids.id(PartsBuilder.unitCleatName);
     const pilot =
         'Drill a pilot hole for every screw first (a 1/8" bit is typical for '
         '1-1/4" screws) so the plywood does not split.';
@@ -188,22 +186,23 @@ class AssemblyGuideBuilder {
         'A French cleat is two matching strips with sloped edges. One is '
             'screwed to the wall and one to the back of the unit. The unit '
             'hangs by its own weight and is held tight against the wall.',
-        'Both strips come from the cut list: $wallId (wall half) and $unitId '
-            '(unit half), each $cleatW wide and '
-            '${f(counter.cleatPieceLengths(plan).fold<double>(0, (a, b) => a + b))} '
-            'long in total.',
-        'Cut each long strip into four pieces, one for each row on each '
-            'column: ${f(i.left)}, ${f(i.left)}, ${f(i.right)} and '
-            '${f(i.right)} long. Name them ${wallId}a to ${wallId}d and '
-            '${unitId}a to ${unitId}d. Piece a and b are for the left column '
-            '(top row, middle row) and c and d for the right column.',
+        'The cut list has four pieces of each half, cut to the width of the '
+            'column they go on and $cleatW wide. Wall half: '
+            '${_idList(ids.ids(PartsBuilder.wallCleatLeftName))} for the left '
+            'column (${f(i.left)} long) and '
+            '${_idList(ids.ids(PartsBuilder.wallCleatRightName))} for the '
+            'right column (${f(i.right)} long). Unit half: '
+            '${_idList(ids.ids(PartsBuilder.unitCleatLeftName))} for the left '
+            'column and ${_idList(ids.ids(PartsBuilder.unitCleatRightName))} '
+            'for the right column. The first piece of each pair is the top '
+            'row and the second is the middle row.',
         'Tilt the saw blade to 45 degrees and cut one long edge of every '
             'piece so the edge slopes through the whole 3/4" thickness.',
         'Wall pieces: the sloped edge is on top, and its sharp point sticks '
             'out into the room when the piece is on the wall.',
         'Unit pieces: the sloped edge is on the bottom, and its sharp point '
             'points toward the wall when the piece is on the back of the unit.',
-        'Test ${unitId}a on ${wallId}a on a bench. The unit piece must rest on '
+        'Test ${ids.cleat(0, wall: false)} on ${ids.cleat(0, wall: true)} on a bench. The unit piece must rest on '
             'top of the wall piece with the two sloped faces touching all '
             'along their length. If they do not, re-cut.',
         'Set the pieces aside, labelled. Do not screw anything down yet.',
@@ -800,7 +799,7 @@ class AssemblyGuideBuilder {
     for (var k = 0; k < 4; k++) {
       final left = k < 2;
       final row = k % 2;
-      final unit = '$unitId${'abcd'[k]}';
+      final unit = ids.cleat(k, wall: false);
       final shelfNo = cleats.shelfFor(plan, row);
       final bottom = cleats.bottomEdge(plan, row);
       const shelfName = 'Left column shelf';
@@ -900,7 +899,7 @@ class AssemblyGuideBuilder {
     for (var k = 0; k < 4; k++) {
       final left = k < 2;
       final row = k % 2;
-      final wall = '$wallId${'abcd'[k]}';
+      final wall = ids.cleat(k, wall: true);
       final height = floorGap != null
           ? f(floorGap + cleats.bottomEdge(plan, row))
           : '${f(cleats.bottomEdge(plan, row))} plus the floor height';

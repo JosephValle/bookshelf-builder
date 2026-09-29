@@ -52,4 +52,22 @@ void main() {
       expect(big, greaterThanOrEqualTo(small));
     });
   });
+
+  group('sheet counts follow the cutting layout', () {
+    test('the back sheets come from packing the backs, not from area', () {
+      // Three 57 inch backs cannot share a sheet the way area suggests.
+      final s = planFor(const Inputs(left: 40, right: 40)).sheets;
+      expect(s.backSheets, 3);
+    });
+
+    test('a tighter layout can need fewer back sheets than the area rule', () {
+      final s = planFor(const Inputs(top: 20, bottom: 20)).sheets;
+      expect(s.backSheets, 1);
+    });
+
+    test('a huge column still gets enough sheets', () {
+      final s = planFor(const Inputs(left: 57)).sheets;
+      expect(s.backSheets, greaterThanOrEqualTo(2));
+    });
+  });
 }

@@ -1,5 +1,6 @@
 import 'package:bookshelf_builder/features/planner/domain/models/part.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
+import 'package:bookshelf_builder/features/planner/domain/services/parts_builder.dart';
 
 /// Looks up the piece ids (`A1`, `B3`) of a plan's parts by name, so the
 /// assembly guide and its diagrams can say exactly which piece goes where.
@@ -19,6 +20,12 @@ class PieceIds {
     final all = ids(name);
     return index < all.length ? all[index] : name.toLowerCase();
   }
+
+  /// The id of French cleat piece [k] (0 to 3): 0 and 1 are the top and middle
+  /// rows of the left column, 2 and 3 the same rows on the right column. It is
+  /// the wall half when [wall] is true, otherwise the unit half.
+  String cleat(int k, {required bool wall}) =>
+      id(PartsBuilder.cleatName(wall: wall, left: k < 2), k % 2);
 
   /// The letter shared by every piece of [name], or empty when unknown.
   String label(String name) => _byName[name]?.label ?? '';

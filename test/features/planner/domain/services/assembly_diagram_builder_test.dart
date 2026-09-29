@@ -1,6 +1,6 @@
 import 'package:bookshelf_builder/features/planner/domain/models/assembly_diagram.dart';
-import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/inputs.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/assembly_diagram_builder.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/assembly_guide_builder.dart';
@@ -24,13 +24,10 @@ void main() {
     test('the cleat pair shows both halves apart and hooked', () {
       final d = dg.cleatPair(plan);
       expect(d.shapes.length, 4);
-      expect(labels(d), {
-        ids.id('Wall French cleat'),
-        ids.id('Unit French cleat'),
-      });
+      expect(labels(d), {ids.cleat(0, wall: true), ids.cleat(0, wall: false)});
       expect(d.pieces.map((p) => p.label), [
-        ids.id('Wall French cleat'),
-        ids.id('Unit French cleat'),
+        ids.cleat(0, wall: true),
+        ids.cleat(0, wall: false),
       ]);
     });
 
@@ -185,9 +182,11 @@ void main() {
 
     test('the unit cleat picture names the piece being fixed', () {
       final d = dg.unitCleat(plan, current: 2);
-      final base = ids.id('Unit French cleat');
-      expect(labels(d), containsAll(['${base}a', '${base}b', '${base}c']));
-      expect(labels(d), isNot(contains('${base}d')));
+      expect(
+        labels(d),
+        containsAll([for (var k = 0; k < 3; k++) ids.cleat(k, wall: false)]),
+      );
+      expect(labels(d), isNot(contains(ids.cleat(3, wall: false))));
     });
 
     test('unit cleat screws are 1 inch from the ends and 6 apart', () {
@@ -388,11 +387,6 @@ void main() {
       expect(d.shapes.length, 1);
     });
   });
-}
-
-String formatterFor(double v) {
-  // Bar positions are shown with the same 1/16 formatting as the guide.
-  return const AssemblyGuideBuilder().formatter.format(v);
 
   group('cutting layout pictures', () {
     final p = planFor();
@@ -430,7 +424,9 @@ String formatterFor(double v) {
     });
 
     test('writes the length on pieces big enough to hold it', () {
-      final inside = d.dimensions.where((e) => e.from.x < 96 && e.text != '96"');
+      final inside = d.dimensions.where(
+        (e) => e.from.x < 96 && e.text != '96"',
+      );
       expect(inside, isNotEmpty);
       for (final m in inside) {
         expect(m.light, isTrue, reason: 'panels are dark');
@@ -455,11 +451,16 @@ String formatterFor(double v) {
       final bd = dg.cutSheet(back, of: 1);
       expect(bd.caption, contains('1/4" sheet 1 of 1'));
       expect(
-        bd.dimensions.where((e) => e.from.x < 96 && e.text != '96"').every(
-          (e) => !e.light,
-        ),
+        bd.dimensions
+            .where((e) => e.from.x < 96 && e.text != '96"')
+            .every((e) => !e.light),
         isTrue,
       );
     });
   });
+}
+
+String formatterFor(double v) {
+  // Bar positions are shown with the same 1/16 formatting as the guide.
+  return const AssemblyGuideBuilder().formatter.format(v);
 }

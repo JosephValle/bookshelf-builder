@@ -128,4 +128,19 @@ void main() {
       expect(text, contains('mortar'));
     });
   });
+
+  group('cutting layout in the guide', () {
+    test('has a picture step for every sheet', () async {
+      const plain = PdfDocumentBuilder(compress: false);
+      final text = pdfText(await plain.build(planFor()));
+      expect(text, contains('Cut 3/4" sheet 1 of 3'));
+      expect(text, contains('Cut 1/4" sheet 1 of 1'));
+      expect(text, contains('drawn to scale'));
+    });
+
+    test('a layout with oversize backs still builds', () async {
+      final bytes = await builder.build(planFor(Inputs.home));
+      expect(bytes, isNotEmpty);
+    });
+  });
 }

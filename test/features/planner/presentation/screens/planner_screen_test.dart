@@ -369,6 +369,76 @@ void main() {
       expect(find.byType(PaneDivider), findsNothing);
     });
   });
+
+  group('saving the PDF', () {
+    testWidgets('shows a Save PDF button where the platform can save', (
+      tester,
+    ) async {
+      await pump(tester, const Size(1400, 900));
+      expect(find.text('Save PDF'), findsOneWidget);
+    });
+
+    testWidgets('hides the button where it cannot', (tester) async {
+      tester.view.physicalSize = const Size(1400, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final fake = FakePdfExporter()..saveSupported = false;
+      final c = PlannerCubit(
+        clipboard: FakeClipboardWriter(),
+        pdfExporter: fake,
+        store: FakeInputsStore(),
+      );
+      final p = PaneLayoutCubit(store: FakePaneLayoutStore());
+      addTearDown(c.close);
+      addTearDown(p.close);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiBlocProvider(
+            providers: [
+              BlocProvider.value(value: c),
+              BlocProvider.value(value: p),
+            ],
+            child: const PlannerScreen(),
+          ),
+        ),
+      );
+      expect(find.text('Save PDF'), findsNothing);
+      expect(find.text('Export PDF'), findsOneWidget);
+    });
+
+    testWidgets('saving offers to show the file in Finder', (tester) async {
+      await pump(tester, const Size(1400, 900));
+      await tester.tap(find.text('Save PDF'));
+      await tester.pump();
+      await tester.pump();
+      expect(pdf.saved.length, 1);
+      expect(find.text('PDF saved'), findsOneWidget);
+      // Let the snack bar finish sliding in before tapping its action.
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Show in Finder'), findsOneWidget);
+      await tester.tap(find.text('Show in Finder'));
+      await tester.pump();
+      expect(pdf.revealed, ['/tmp/shelf_planner.pdf']);
+    });
+
+    testWidgets('cancelling the save panel shows no message', (tester) async {
+      await pump(tester, const Size(1400, 900));
+      pdf.savePath = null;
+      await tester.tap(find.text('Save PDF'));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('PDF saved'), findsNothing);
+      expect(find.text('Show in Finder'), findsNothing);
+    });
+
+    testWidgets('other messages have no Finder button', (tester) async {
+      await pump(tester, const Size(1400, 900));
+      await tester.tap(find.text('Copy CSV'));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Show in Finder'), findsNothing);
+    });
+  });
 }
 
 extension on Matcher {

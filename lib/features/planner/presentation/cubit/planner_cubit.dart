@@ -31,6 +31,7 @@ class PlannerCubit extends Cubit<PlannerState> {
   final PlanEngine _engine;
   final CutListCsvBuilder _csvBuilder;
   final SummaryBuilder _summaryBuilder;
+  String? _lastSavedPath;
 
   /// Replaces the inputs, recomputes the plan and saves the inputs so a
   /// refresh restores them.
@@ -64,6 +65,51 @@ class PlannerCubit extends Cubit<PlannerState> {
     'Summary copied',
     'Could not copy the summary',
   );
+
+  /// True when the PDF can be saved to a file and shown in the file manager.
+  bool get canSavePdf => _pdfExporter.canSave;
+
+  /// Asks where to save the PDF, writes it, and offers to show it in the file
+  /// manager. Does nothing when the user cancels.
+  Future<void> savePdf() async {
+    String? path;
+    String message;
+    try {
+      path = await _pdfExporter.save(state.plan);
+      if (path == null) return;
+      message = 'PDF saved';
+    } catch (_) {
+      message = 'Could not save the PDF';
+    }
+    _lastSavedPath = path;
+    emit(
+      PlannerState(
+        inputs: state.inputs,
+        plan: state.plan,
+        notice: message,
+        noticeId: state.noticeId + 1,
+        savedPath: path,
+      ),
+    );
+  }
+
+  /// Shows the most recently saved PDF in the file manager.
+  Future<void> revealSaved() async {
+    final path = _lastSavedPath;
+    if (path == null) return;
+    try {
+      await _pdfExporter.reveal(path);
+    } catch (_) {
+      emit(
+        PlannerState(
+          inputs: state.inputs,
+          plan: state.plan,
+          notice: 'Could not show the file',
+          noticeId: state.noticeId + 1,
+        ),
+      );
+    }
+  }
 
   /// Opens the PDF print or save dialog.
   Future<void> exportPdf() => _run(
