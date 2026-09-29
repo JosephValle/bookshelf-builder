@@ -2,12 +2,15 @@
 
 import 'package:bookshelf_builder/features/planner/domain/models/assembly_diagram.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/assembly_step.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/cut_sheet.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/fasteners.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/layout_piece.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/limits.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/assembly_diagram_builder.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/cleat_layout.dart';
+import 'package:bookshelf_builder/features/planner/domain/services/cut_layout_builder.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/fastener_counter.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/inches_formatter.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/parts_builder.dart';
@@ -28,6 +31,7 @@ class AssemblyGuideBuilder {
     this.diagrams = const AssemblyDiagramBuilder(),
     this.counter = const FastenerCounter(),
     this.cleats = const CleatLayout(),
+    this.layout = const CutLayoutBuilder(),
   });
 
   /// Inch formatting used for measurements.
@@ -41,6 +45,9 @@ class AssemblyGuideBuilder {
 
   /// Places the French cleat rows.
   final CleatLayout cleats;
+
+  /// Lays the pieces out on the plywood sheets.
+  final CutLayoutBuilder layout;
 
   /// Returns the ordered steps. Steps that do not apply (toe kick, edge band,
   /// wall fit, dividers) are left out.
@@ -57,6 +64,14 @@ class AssemblyGuideBuilder {
       List<String> details, [
       List<AssemblyDiagram> pictures = const [],
     ]) => steps.add(AssemblyStep(title, details, diagrams: pictures));
+    void checkpoint(
+      String title,
+      List<String> checks,
+      List<AssemblyDiagram> pictures,
+    ) => steps.add(
+      AssemblyStep(title, checks, diagrams: pictures, checkpoint: true),
+    );
+    final concrete = i.concreteWall;
 
     String plural(int count, String word) => count == 1 ? word : '${word}s';
     final cleatW = f(Limits.anchorCleatW);
@@ -80,14 +95,17 @@ class AssemblyGuideBuilder {
         'Solid front edge band: ${(plan.edgeBandInches / 12).toStringAsFixed(1)} '
             'linear feet.',
       'Wood glue, 1-1/4" screws or pocket screws, 18 gauge brad nails, and '
-          'construction screws for the wall.',
+          '${concrete ? '3/16" x 2-1/4" concrete screws' : 'construction screws'} '
+          'for the wall.',
       'Fasteners to buy (about, plus a few spares): '
           '1-1/4" screws: ${counter.columnScrews(plan, plan.leftCol) + counter.columnScrews(plan, plan.rightCol) + counter.barScrews(plan, plan.topBar) + counter.barScrews(plan, plan.bottomBar) + counter.ringScrews(plan) + counter.toeKickScrews(plan)}. '
           '1" brad nails: ${counter.backBrads(plan)}. '
           '2" screws for the unit cleat: ${counter.unitCleatScrews(plan)}. '
-          '3" screws for the wall cleat: ${counter.wallCleatScrews(plan)}.',
+          '${concrete ? '3/16" x 2-1/4" concrete screws' : '3" screws'} '
+          'for the wall cleat: ${counter.wallCleatScrews(plan)}.',
       'Circular saw with a straight edge guide or a table saw, drill, clamps, '
-          'a large square, a level, and a stud finder.',
+          'a large square, a level, and '
+          '${concrete ? 'a hammer drill with a 5/32" carbide masonry bit and a blow-out bulb or vacuum' : 'a stud finder'}.',
       'Also have a pencil, a tape measure, painter tape, sandpaper (120 and '
           '150 grit), a damp rag for wiping off glue, and two sawhorses.',
       'The cut list gives every part with its size and count. Print it or '
@@ -149,6 +167,10 @@ class AssemblyGuideBuilder {
           'then 150 grit. It is much easier before the parts are glued into '
           'boxes.',
     ]);
+
+    for (final step in _sheetSteps(plan)) {
+      steps.add(step);
+    }
 
     add('Label every piece', [
       'Write each piece id in pencil on the inside face of the piece, near '
@@ -350,6 +372,25 @@ class AssemblyGuideBuilder {
         ],
         [dg.squareCheck(plan, w: colW, h: plan.sideH, what: 'the column')],
       );
+
+      checkpoint(
+        'Checkpoint: the ${side.toLowerCase()} column',
+        [
+          'It should look like the picture: two tall panels ($outer and '
+              '$inner) with ${c.shelves} ${plural(c.shelves, 'shelf')} '
+              '${c.shelves == 0 ? '' : '(${ids.id(shelfName, 0)}'
+                        '${c.shelves > 1 ? ' to ${ids.id(shelfName, c.shelves - 1)}' : ''}) '}'
+              'between them.',
+          'The two panels are parallel and the same length, ${f(plan.sideH)}.',
+          if (c.shelves > 0)
+            'Every shelf sits on its line: the first ${f(c.clearH)} up, then '
+                'every ${f(c.clearH + Limits.t)}. Check two or three with the '
+                'tape measure.',
+          'Every screw is driven flush and there is no gap at any shelf end.',
+          'The diagonals match within 1/16" and the glue has been wiped off.',
+        ],
+        [dg.columnDone(plan, left: left)],
+      );
     }
 
     // ---------------------------------------------------------------------
@@ -494,6 +535,25 @@ class AssemblyGuideBuilder {
         ],
         [dg.barSkin(plan, top: top)],
       );
+
+      checkpoint(
+        'Checkpoint: the ${which.toLowerCase()} bar unit',
+        [
+          'It should look like the picture: the long panel ($long) with '
+              'the short panel ($short) fixed over the dividers.',
+          if (b.dividers > 0)
+            'The ${b.dividers} ${plural(b.dividers, 'divider')} '
+                '(${ids.ids(divName).first}'
+                '${b.dividers > 1 ? ' to ${ids.ids(divName).last}' : ''}) '
+                'are square to the panels and ${f(b.bayW)} apart.',
+          if (hasCleat)
+            'The anchor cleat ($cleat) is tight against the '
+                '${top ? 'top' : 'bottom'} panel at the back.',
+          '$short stops ${f(i.left)} short of each end of $long.',
+          'Both diagonals of the bar box match within 1/16".',
+        ],
+        [dg.barDone(plan, top: top)],
+      );
     }
 
     // ---------------------------------------------------------------------
@@ -630,6 +690,28 @@ class AssemblyGuideBuilder {
       ],
     );
 
+    checkpoint(
+      'Checkpoint: the ring',
+      [
+        'It should look like the picture: a frame around the window opening, '
+            'seen from the front, with every shelf and divider in place. '
+            'Each id is where that piece goes.',
+        'The ring is ${f(plan.ringW)} wide by ${f(plan.ringH)} tall and the '
+            'window opening is ${f(i.openW)} by ${f(i.openH)}.',
+        'Both bar units and both columns are square to each other, with no '
+            'gaps at any joint.',
+        'Every shelf line is straight and level.',
+      ],
+      [
+        dg.elevation(
+          plan,
+          caption:
+              'The assembled ring, front view, to scale. Compare it with '
+              'yours.',
+        ),
+      ],
+    );
+
     if (i.edgeStiffener) {
       add('Add the front edge band', [
         'With the ring still on its back, the front edges point up.',
@@ -700,6 +782,17 @@ class AssemblyGuideBuilder {
       );
     }
 
+    checkpoint(
+      'Checkpoint: the back of the unit',
+      [
+        'It should look like the picture: four 1/4" backs covering the two '
+            'columns and the two bars, with the window opening left open.',
+        'No back panel overhangs an edge, and every edge is nailed down.',
+        'The unit is still square: measure the diagonals once more.',
+      ],
+      [dg.backs(plan, current: 3)],
+    );
+
     // ---------------------------------------------------------------------
     // French cleat, unit half
 
@@ -747,33 +840,62 @@ class AssemblyGuideBuilder {
       );
     }
 
+    checkpoint(
+      'Checkpoint: the unit half of the French cleat',
+      [
+        'It should look like the picture: four strips on the back, two on '
+            'each column, one near the top and one near the middle.',
+        'Each strip sits at the same height on both columns.',
+        'The sloped edge is on the bottom of every strip, with its sharp '
+            'point toward the wall.',
+        'Every strip is glued and screwed down with no gaps.',
+      ],
+      [dg.unitCleat(plan, current: 3)],
+    );
+
     // ---------------------------------------------------------------------
     // Wall
 
     final floorGap = cleats.unitBottomAboveFloor(plan);
-    add('Mount: find the studs and mark the heights', [
-      'Find the studs (usually every ${f(Limits.studSpacing)} on center) and '
-          'mark them with painter tape. Confirm each one by probing with a '
-          'thin nail in a spot that will be hidden.',
-      if (i.wallW != null)
-        'On your wall the window sits ${f(i.windowLeftOnWall ?? 0)} from the '
-            'left edge, with a ${f(plan.inputs.left)} left column and a '
-            '${f(plan.inputs.right)} right column.',
-      floorGap != null
-          ? 'The bottom of the unit is ${f(floorGap)} above the floor.'
-          : 'Decide how high the bottom of the unit will be above the floor '
-                'and measure it. Call this the floor height.',
-      for (var row = 0; row < CleatLayout.rows; row++)
-        'The ${rowLabel[row]} wall pieces go with their sharp top edge '
-            '${floorGap != null ? f(floorGap + cleats.bottomEdge(plan, row)) : '${f(cleats.bottomEdge(plan, row))} plus the floor height'} '
-            'above the floor. Draw a level line at that height.',
-      'The two rows must be level and the same height on both columns.',
-      'The far ends of the left and right pieces are ${f(plan.ringW)} apart. '
-          'Mark where the unit will start and end.',
-      'Each row of cleat must cross at least one stud. If a column is '
-          'narrower than the stud spacing it may not, so use hollow wall '
-          'anchors rated for the load in that case.',
-    ]);
+    add(
+      concrete
+          ? 'Mount: check the wall and mark the heights'
+          : 'Mount: find the studs and mark the heights',
+      [
+        if (concrete) ...[
+          'Check what your wall is made of. Solid poured concrete, or the face '
+              'of a solid block, takes 3/16" concrete screws. Hollow block or '
+              'brick with cores needs sleeve or hollow-wall anchors instead: '
+              'ask at the hardware store and follow the package.',
+          'Plan every hole in the face of the concrete or block, never in a '
+              'mortar joint. Keep each hole at least 2" from a corner or '
+              'edge, and follow the screw package for spacing.',
+        ] else ...[
+          'Find the studs (usually every ${f(i.studSpacing)} on center) and '
+              'mark them with painter tape. Confirm each one by probing with a '
+              'thin nail in a spot that will be hidden.',
+        ],
+        if (i.wallW != null)
+          'On your wall the window sits ${f(i.windowLeftOnWall ?? 0)} from the '
+              'left edge, with a ${f(plan.inputs.left)} left column and a '
+              '${f(plan.inputs.right)} right column.',
+        floorGap != null
+            ? 'The bottom of the unit is ${f(floorGap)} above the floor.'
+            : 'Decide how high the bottom of the unit will be above the floor '
+                  'and measure it. Call this the floor height.',
+        for (var row = 0; row < CleatLayout.rows; row++)
+          'The ${rowLabel[row]} wall pieces go with their sharp top edge '
+              '${floorGap != null ? f(floorGap + cleats.bottomEdge(plan, row)) : '${f(cleats.bottomEdge(plan, row))} plus the floor height'} '
+              'above the floor. Draw a level line at that height.',
+        'The two rows must be level and the same height on both columns.',
+        'The far ends of the left and right pieces are ${f(plan.ringW)} apart. '
+            'Mark where the unit will start and end.',
+        if (!concrete)
+          'Each row of cleat must cross at least one stud. If a column is '
+              'narrower than the stud spacing it may not, so use hollow wall '
+              'anchors rated for the load in that case.',
+      ],
+    );
 
     for (var k = 0; k < 4; k++) {
       final left = k < 2;
@@ -787,13 +909,37 @@ class AssemblyGuideBuilder {
         [
           'This is the ${rowLabel[row]} on the ${left ? 'left' : 'right'} '
               'column. It is ${f(left ? i.left : i.right)} long.',
-          'Hold it on the level line with its sloped edge on top and its sharp '
-              'point sticking out from the wall. Its top edge is $height above '
-              'the floor.',
-          'Drive 3" screws through it into every stud it crosses: two per '
-              'stud, one ${f(Fasteners.wallScrewEdgeInset)} below the top edge '
-              'and one ${f(Fasteners.wallScrewEdgeInset)} above the bottom '
-              'edge.',
+          if (concrete) ...[
+            'On the bench, drill 7/32" clearance holes straight through $wall '
+                'in pairs: one pair ${f(Fasteners.concreteEndInset)} from each '
+                'end and another at least every '
+                '${f(Fasteners.concreteSpacing)} between. In each pair, one '
+                'hole is ${f(Fasteners.wallScrewEdgeInset)} below the top edge '
+                'and one ${f(Fasteners.wallScrewEdgeInset)} above the bottom '
+                'edge.',
+            'Hold it on the level line with its sloped edge on top and its '
+                'sharp point sticking out from the wall. Its top edge is '
+                '$height above the floor.',
+            'Through each hole, drill into the wall with the hammer drill and '
+                'the 5/32" carbide bit, about 1-3/4" deep (1/4" deeper than '
+                'the screw goes). Run the drill in and out to clear the dust. '
+                'If the bit stops dead against rebar or stone, move that '
+                'pair over about 1" and try again.',
+            'Take the piece down and blow the dust out of every hole with the '
+                'bulb or a vacuum.',
+            'Hold the piece back on the line and drive a 3/16" x 2-1/4" '
+                'concrete screw into every hole. Stop when the head is snug: '
+                'over-tightening strips the hole.',
+          ] else ...[
+            'Hold it on the level line with its sloped edge on top and its '
+                'sharp point sticking out from the wall. Its top edge is '
+                '$height above the floor.',
+            'Drive 3" screws through it into every stud it crosses: two per '
+                'stud, one ${f(Fasteners.wallScrewEdgeInset)} below the top '
+                'edge and one ${f(Fasteners.wallScrewEdgeInset)} above the '
+                'bottom edge.',
+            pilot,
+          ],
           'Check it with the level before the next piece.',
         ],
         [dg.cleatScrews(plan, wall: true, piece: k)],
@@ -811,9 +957,34 @@ class AssemblyGuideBuilder {
             'anchor cleat, never through the 1/4" back alone. Put a scrap of '
             '3/4" plywood between the bar and the wall at each screw so it '
             'does not pull the back out of shape.',
+        if (concrete)
+          'Use the same 3/16" x 2-1/4" concrete screws: '
+              'drill through the anchor cleat and the spacer into the wall '
+              'with the 5/32" bit, blow out the dust, then drive the screws '
+              'snug.',
         'Level the unit, then anchor it against tipping.',
       ],
       [dg.mount(plan)],
+    );
+
+    checkpoint(
+      'Checkpoint: the finished unit on the wall',
+      [
+        'It should look like the picture: the unit hangs on the cleat, '
+            'level, about ${f(Limits.t)} off the wall, with the window '
+            'framed in the middle.',
+        'The unit does not rock when you push on it.',
+        'The bar over the window is anchored through its anchor cleat.',
+        'The anti-tip straps or anchors are fitted.',
+      ],
+      [
+        dg.elevation(
+          plan,
+          caption:
+              'The finished unit, front view, to scale. This is what you '
+              'should see from the room.',
+        ),
+      ],
     );
 
     add('Finish and check', [
@@ -827,7 +998,293 @@ class AssemblyGuideBuilder {
       'These limits are rules of thumb. Verify them against your actual '
           'book load.',
     ]);
+    return _withTools(plan, steps);
+  }
+
+  /// True for an id such as `J1a`: a piece cut from a back panel that is bigger
+  /// than a sheet.
+  bool _isHalf(String id) => RegExp(r'\d[a-z]$').hasMatch(id);
+
+  /// Piece ids as text: `D3`, `D1 to D4` when they run in order, otherwise
+  /// every id separated by commas.
+  String _idList(List<String> ids) {
+    if (ids.length == 1) return ids.first;
+    int number(String id) => int.parse(id.replaceAll(RegExp('[^0-9]'), ''));
+    final letters = ids.first.replaceAll(RegExp('[0-9]'), '');
+    final inOrder =
+        ids.every((id) => id.replaceAll(RegExp('[0-9]'), '') == letters) &&
+        [
+          for (var k = 1; k < ids.length; k++)
+            number(ids[k]) - number(ids[k - 1]),
+        ].every((d) => d == 1);
+    return inOrder ? '${ids.first} to ${ids.last}' : ids.join(', ');
+  }
+
+  /// One step per plywood sheet: a to-scale picture of the cuts, the rip and
+  /// crosscut marks to draw, and the size of every piece on it.
+  List<AssemblyStep> _sheetSteps(Plan plan) {
+    final f = formatter.format;
+    final sheets = layout.build(parts: plan.parts, depthPanel: plan.depthPanel);
+    final steps = <AssemblyStep>[];
+    for (final material in [PartMaterial.ply34, PartMaterial.ply14]) {
+      final own = [
+        for (final s in sheets)
+          if (s.material == material) s,
+      ];
+      final label = material == PartMaterial.ply34 ? '3/4"' : '1/4"';
+      for (final sheet in own) {
+        steps.add(
+          AssemblyStep(
+            'Cut $label sheet ${sheet.number} of ${own.length}',
+            _sheetDetails(plan, sheet, label, f),
+            diagrams: [diagrams.cutSheet(sheet, of: own.length)],
+          ),
+        );
+      }
+    }
     return steps;
+  }
+
+  List<String> _sheetDetails(
+    Plan plan,
+    CutSheet sheet,
+    String label,
+    String Function(double) f,
+  ) {
+    final is34 = sheet.material == PartMaterial.ply34;
+    final tops = sheet.stripTops;
+    final marks = sheet.ripMarks;
+    final waste = Limits.sheetW - marks.last;
+    String ends(List<LayoutPiece> strip) =>
+        [for (final p in strip) f(p.x + p.length)].join(', ');
+    // One legend line per part on this sheet.
+    final byName = <String, List<LayoutPiece>>{};
+    for (final p in sheet.pieces) {
+      (byName[p.name] ??= []).add(p);
+    }
+    return [
+      'Lay the $label sheet with a long edge toward you. The picture shows '
+          'it that way: measure rips from the top long edge of the picture, '
+          'and crosscuts from its left short end.',
+      'Rip ${tops.length} ${tops.length == 1 ? 'strip' : 'strips'}. Mark '
+          'each rip at these distances from the top long edge: '
+          '${[for (final m in marks) f(m)].join(', ')}. Cut just past each '
+          'mark, on the waste side, because the blade removes '
+          '${f(Limits.kerf)}.',
+      if (waste > 0.5)
+        'What is left below the last strip, ${f(waste)} wide, is waste or '
+            'a spare.',
+      for (var k = 0; k < tops.length; k++)
+        'Strip ${k + 1} (${f(sheet.stripWidth(tops[k]))} wide): '
+            '${[for (final p in sheet.strip(tops[k])) '${p.id} ${f(p.length)}'].join(', ')}. '
+            'Crosscut marks from the left end: '
+            '${ends(sheet.strip(tops[k]))}.',
+      'Legend, piece by piece:',
+      for (final e in byName.entries)
+        '${_idList([for (final p in e.value) p.id])} '
+            '${e.key.toLowerCase()}: ${f(e.value.first.length)} by '
+            '${f(e.value.first.width)}'
+            '${_isHalf(e.value.first.id) ? ' (one piece of a back that is bigger than a sheet: join the pieces behind a divider, or over a 3/4" by 2" backer strip)' : ''}'
+            '${is34 ? '' : ' (cut list ${f(e.value.first.length + 2 * CutLayoutBuilder.backTrimPerEdge)} by ${f(e.value.first.width + 2 * CutLayoutBuilder.backTrimPerEdge)}, cut 1/16" under on every edge)'}.',
+      if (is34)
+        'Cut the longest pieces first and write each id on its piece as you '
+            'cut it.'
+      else
+        'Write each id on its back panel as you cut it.',
+    ];
+  }
+
+  /// The pictures for the last page of the guide: the whole unit with the id
+  /// of every piece written on it, and the back with its four panels.
+  List<AssemblyDiagram> pieceMap(Plan plan) => [
+    diagrams.elevation(
+      plan,
+      caption:
+          'Where every piece goes, front view, to scale. Each id is a piece '
+          'from the cut list; pieces with the same letter are identical. '
+          'Shelves and bar shelves are written just above their line at '
+          'their left end, dividers at their top end just to the right, '
+          'column panels just inside their column, and the four long '
+          'panels inside the bars.',
+    ),
+    diagrams
+        .backs(plan, current: 3)
+        .copyWith(
+          caption:
+              'The back of the unit. The four 1/4" back panels cover the two '
+              'columns and the two bars.',
+        ),
+  ];
+
+  /// Adds the tools and hardware to each step.
+  ///
+  /// The hardware comes from the pieces strip of the step's first picture,
+  /// so the counts always match what the picture shows.
+  List<AssemblyStep> _withTools(Plan plan, List<AssemblyStep> steps) => [
+    for (final s in steps)
+      AssemblyStep(
+        s.title,
+        s.details,
+        diagrams: s.diagrams,
+        checkpoint: s.checkpoint,
+        tools: _tools(plan, s.title),
+        hardware: [
+          for (final d in s.diagrams.take(1).expand((d) => d.pieces))
+            if (d.label.isEmpty) d.qty > 0 ? '${d.qty} x ${d.name}' : d.name,
+        ],
+      ),
+  ];
+
+  static const String _pilotBit =
+      'Drill with a 1/8" bit: drills the pilot hole for every screw';
+  static const String _driver =
+      'Drill with a driver bit: drives the screws (use a low clutch setting '
+      'so it does not strip the head)';
+  static const String _clamps =
+      'Clamps: hold the pieces tight and square while you fasten them';
+  static const String _square =
+      'Framing square: checks every joint is exactly 90 degrees';
+  static const String _tape = 'Tape measure and pencil: measure and draw lines';
+  static const String _rag =
+      'Damp rag: wipes off squeezed-out glue before it dries';
+  static const String _glasses =
+      'Safety glasses, hearing protection and dust mask: wear them for every '
+      'cut and when sanding';
+
+  /// The tools for the step called [title], each with what it is used for.
+  List<String> _tools(Plan plan, String title) {
+    final concrete = plan.inputs.concreteWall;
+    bool starts(String prefix) => title.startsWith(prefix);
+    const join = [_pilotBit, _driver, _clamps, _square, _rag];
+    if (starts('Gather') || starts('Label') || starts('Flip')) {
+      return starts('Label') ? const [_tape] : const [];
+    }
+    if (starts('Before you cut')) return const [_glasses];
+    if (starts('Rip and cut') || starts('Cut 3/4"') || starts('Cut 1/4"')) {
+      return const [
+        'Circular saw with a straight edge guide, or a table saw: rips the '
+            'sheets into strips and crosscuts them to length',
+        'Clamps: hold the straight edge guide to the sheet',
+        'Sawhorses and foam or scrap boards: support the sheet so the cut '
+            'does not pinch',
+        _tape,
+        _square,
+        'Sandpaper (120 then 150 grit): smooths faces and eases edges',
+        _glasses,
+      ];
+    }
+    if (starts('Make the French cleat')) {
+      return const [
+        'Circular saw or table saw with the blade tilted to 45 degrees: cuts '
+            'the sloped edge on every cleat piece',
+        'Clamps: hold each piece while you cut it',
+        _tape,
+        _glasses,
+      ];
+    }
+    if (starts('Left column: mark') || starts('Right column: mark')) {
+      return const [_tape, _square, _clamps];
+    }
+    if (starts('Left column: check') ||
+        starts('Right column: check') ||
+        starts('Ring: check')) {
+      return const [
+        'Tape measure: measures both diagonals',
+        'Clamps: pull a long corner in until the diagonals match',
+      ];
+    }
+    if (starts('Top bar: mark') || starts('Bottom bar: mark')) {
+      return const [_tape, _square];
+    }
+    if (starts('Top bar: notch') || starts('Bottom bar: notch')) {
+      return const [
+        'Jig saw or hand saw: cuts the notch out of each divider',
+        'Chisel or sandpaper: squares the corner of the notch',
+        _square,
+        _tape,
+        _glasses,
+      ];
+    }
+    if (starts('Ring: lay')) return const [_clamps];
+    if (starts('Ring: slide')) return const [_clamps, _tape];
+    if (starts('Add the front edge band')) {
+      return const [
+        'Brad nailer (18 gauge): fixes the edge band to the panel fronts',
+        _clamps,
+        'Sander or sandpaper: flushes the band with the panel faces',
+        _rag,
+      ];
+    }
+    if (starts('Build the toe kick')) {
+      return const [
+        _pilotBit,
+        _driver,
+        _clamps,
+        '4 ft level: checks the toe kick is level along its length',
+        'Shims: level the toe kick on an uneven floor',
+      ];
+    }
+    if (starts('Back panel')) {
+      return const [
+        'Brad nailer (18 gauge) with 1" brads: nails the back panel down',
+        _tape,
+        _rag,
+      ];
+    }
+    if (starts('Checkpoint')) return const [_tape];
+    if (starts('French cleat: fasten')) {
+      return const [_pilotBit, _driver, _clamps, _tape];
+    }
+    if (starts('Mount: find') || starts('Mount: check the wall')) {
+      return concrete
+          ? const [
+              _tape,
+              '4 ft level: draws the level lines for the cleat',
+              'Painter tape and pencil: mark the heights on the wall',
+            ]
+          : const [
+              'Stud finder: locates each stud',
+              _tape,
+              '4 ft level: draws the level lines for the cleat',
+              'Painter tape and pencil: mark studs and heights on the wall',
+            ];
+    }
+    if (starts('Mount: screw wall piece')) {
+      return concrete
+          ? const [
+              'Drill with a 7/32" bit: drills clearance holes through the '
+                  'cleat piece',
+              'Hammer drill with a 5/32" carbide masonry bit: drills the '
+                  'holes in the wall',
+              'Blow-out bulb or vacuum: clears the dust from each hole',
+              _driver,
+              '4 ft level: checks the piece is level',
+            ]
+          : const [_pilotBit, _driver, '4 ft level: checks the piece is level'];
+    }
+    if (starts('Mount: hang')) {
+      return concrete
+          ? const [
+              'Hammer drill with a 5/32" carbide masonry bit: drills the '
+                  'anchor holes',
+              _driver,
+              '4 ft level: checks the unit is level',
+              'A helper: lifts and holds the unit',
+            ]
+          : const [
+              _pilotBit,
+              _driver,
+              '4 ft level: checks the unit is level',
+              'A helper: lifts and holds the unit',
+            ];
+    }
+    if (starts('Finish')) {
+      return const [
+        'Sander or sandpaper (150 grit): smooths the unit before finishing',
+        'Putty knife: fills nail holes',
+      ];
+    }
+    return join;
   }
 
   /// Distance from the left end of the long panel to the left face of divider

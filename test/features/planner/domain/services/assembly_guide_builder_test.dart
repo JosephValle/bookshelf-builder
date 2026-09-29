@@ -32,15 +32,16 @@ void main() {
         'Gather materials and tools',
         'Before you cut: safety and words used here',
         'Rip and cut the parts',
-        'Label every piece',
-        'Make the French cleat pair',
+        'Cut 3/4" sheet 1 of 3',
+        'Cut 3/4" sheet 2 of 3',
       ]);
     });
 
     test('closes with the wall and finish steps', () {
       final titles = steps().map((s) => s.title).toList();
       expect(titles.last, 'Finish and check');
-      expect(titles[titles.length - 2], 'Mount: hang the unit');
+      expect(titles[titles.length - 3], 'Mount: hang the unit');
+      expect(titles[titles.length - 2], startsWith('Checkpoint'));
     });
 
     test('phases come in build order', () {
@@ -407,6 +408,284 @@ void main() {
       expect(
         allText(steps(const Inputs(edgeStiffener: true))).contains('—'),
         isFalse,
+      );
+    });
+  });
+
+  group('checkpoints', () {
+    final s = steps();
+    final points = s.where((e) => e.checkpoint).toList();
+
+    test('there is a checkpoint after each major stage', () {
+      final titles = points.map((e) => e.title).toList();
+      expect(titles, [
+        'Checkpoint: the left column',
+        'Checkpoint: the right column',
+        'Checkpoint: the top bar unit',
+        'Checkpoint: the bottom bar unit',
+        'Checkpoint: the ring',
+        'Checkpoint: the back of the unit',
+        'Checkpoint: the unit half of the French cleat',
+        'Checkpoint: the finished unit on the wall',
+      ]);
+    });
+
+    test('every checkpoint shows a picture and lists what to check', () {
+      for (final c in points) {
+        expect(c.diagrams, isNotEmpty, reason: c.title);
+        expect(c.details.length, greaterThanOrEqualTo(3), reason: c.title);
+        expect(c.details.first, contains('should look like'));
+      }
+    });
+
+    test('a checkpoint comes straight after the stage it checks', () {
+      final titles = s.map((e) => e.title).toList();
+      final ring = titles.indexWhere((t) => t.startsWith('Ring: check'));
+      expect(titles[ring + 1], 'Checkpoint: the ring');
+      final col = titles.indexWhere((t) => t.startsWith('Left column: check'));
+      expect(titles[col + 1], 'Checkpoint: the left column');
+    });
+
+    test('the ring checkpoint shows the labelled front view', () {
+      final ring = points.firstWhere((e) => e.title.endsWith('the ring'));
+      expect(ring.diagrams.single.labels, isNotEmpty);
+      expect(ring.diagrams.single.large, isTrue);
+    });
+
+    test('ordinary steps are not checkpoints', () {
+      expect(step(s, 'Left column: attach shelf D1').checkpoint, isFalse);
+    });
+  });
+
+  group('tools and hardware', () {
+    test('every working step names the tools to use', () {
+      for (final e in steps()) {
+        if (e.title == 'Gather materials and tools' ||
+            e.title.startsWith('Flip')) {
+          continue;
+        }
+        expect(e.tools, isNotEmpty, reason: e.title);
+      }
+    });
+
+    test('each tool says what it is for', () {
+      for (final e in steps()) {
+        for (final t in e.tools) {
+          expect(t, isNotEmpty);
+          expect(
+            t.contains(':') || t.contains('helper'),
+            isTrue,
+            reason: '${e.title}: $t',
+          );
+        }
+      }
+    });
+
+    test('the cleat pair uses a saw tilted to 45 degrees', () {
+      final tools = step(steps(), 'Make the French cleat').tools.join(' ');
+      expect(tools, contains('45 degrees'));
+    });
+
+    test('a screw step lists the pilot bit, the driver and the clamps', () {
+      final tools = step(steps(), 'Left column: attach shelf D1').tools;
+      expect(tools.any((t) => t.contains('1/8" bit')), isTrue);
+      expect(tools.any((t) => t.contains('driver bit')), isTrue);
+      expect(tools.any((t) => t.startsWith('Clamps')), isTrue);
+    });
+
+    test('the back panels use the brad nailer', () {
+      final tools = step(steps(), 'Back panel').tools.join(' ');
+      expect(tools, contains('Brad nailer'));
+    });
+
+    test('the notch step uses a jig saw', () {
+      final tools = step(steps(), 'Top bar: notch').tools.join(' ');
+      expect(tools, contains('Jig saw'));
+    });
+
+    test('hardware counts come from the picture', () {
+      final hw = step(steps(), 'Left column: attach shelf D1').hardware;
+      expect(hw, contains('3 x 1-1/4" screws'));
+      expect(hw, contains('wood glue'));
+      expect(step(steps(), 'Back panel').hardware.first, contains('brad'));
+    });
+
+    test('steps without a picture have no hardware', () {
+      expect(step(steps(), 'Rip and cut').hardware, isEmpty);
+    });
+  });
+
+  group('wall type', () {
+    final stud = steps();
+    final concrete = steps(const Inputs(concreteWall: true));
+
+    test('a stud wall finds studs at the chosen spacing', () {
+      final text = textOf(
+        step(steps(const Inputs(studSpacing: 18)), 'Mount: find the studs'),
+      );
+      expect(text, contains('every 18" on center'));
+    });
+
+    test('a concrete wall checks the wall instead of finding studs', () {
+      expect(
+        hasStep(concrete, 'Mount: find the studs and mark the heights'),
+        isFalse,
+      );
+      final text = textOf(step(concrete, 'Mount: check the wall'));
+      expect(text, contains('mortar joint'));
+      expect(text, contains('Hollow block'));
+      expect(text, isNot(contains('every 16"')));
+    });
+
+    test('a concrete wall piece is drilled and blown out before screwing', () {
+      final text = textOf(step(concrete, 'Mount: screw wall piece'));
+      expect(text, contains('7/32" clearance holes'));
+      expect(text, contains('5/32" carbide bit'));
+      expect(text, contains('1-3/4" deep'));
+      expect(text, contains('blow the dust out'));
+      expect(text, contains('3/16" x 2-1/4" concrete screw'));
+      expect(text, contains('1 1/2" from each end'));
+      expect(text, contains('12"'));
+    });
+
+    test('a stud wall piece still uses 3 inch screws at each stud', () {
+      final text = textOf(step(stud, 'Mount: screw wall piece'));
+      expect(text, contains('3" screws'));
+      expect(text, isNot(contains('carbide')));
+    });
+
+    test('a concrete wall uses masonry tools on the wall steps', () {
+      final tools = step(concrete, 'Mount: screw wall piece').tools.join(' ');
+      expect(tools, contains('Hammer drill'));
+      expect(tools, contains('Blow-out bulb'));
+      expect(
+        step(concrete, 'Mount: check the wall').tools.join(' '),
+        isNot(contains('Stud finder')),
+      );
+      expect(
+        step(stud, 'Mount: find the studs').tools.join(' '),
+        contains('Stud finder'),
+      );
+    });
+
+    test('the concrete hang step anchors with concrete screws', () {
+      final text = textOf(step(concrete, 'Mount: hang'));
+      expect(text, contains('concrete screws'));
+      expect(
+        textOf(step(stud, 'Mount: hang')),
+        isNot(contains('concrete screws')),
+      );
+    });
+
+    test('the gather step buys concrete screws and masonry tools', () {
+      final text = textOf(step(concrete, 'Gather materials and tools'));
+      expect(text, contains('concrete screws for the wall cleat: 16'));
+      expect(text, contains('hammer drill'));
+      expect(text, isNot(contains('stud finder')));
+    });
+
+    test('the concrete screw count is in the wall step picture', () {
+      final hw = step(concrete, 'Mount: screw wall piece').hardware;
+      expect(hw.single, '4 x 3/16" x 2-1/4" concrete screws');
+    });
+  });
+
+  group('piece map', () {
+    test('shows the front with every piece id, and the back', () {
+      final plan = planFor();
+      final map = builder.pieceMap(plan);
+      expect(map.length, 2);
+      expect(map.first.labels.length, plan.geometry.panels.length);
+      expect(map.first.large, isTrue);
+      expect(map.last.caption, contains('back of the unit'));
+    });
+  });
+
+  group('cutting the sheets', () {
+    final s = steps();
+    final cuts = starting(s, 'Cut ');
+
+    test('there is one step per sheet, before the pieces are labelled', () {
+      expect(cuts.map((e) => e.title), [
+        'Cut 3/4" sheet 1 of 3',
+        'Cut 3/4" sheet 2 of 3',
+        'Cut 3/4" sheet 3 of 3',
+        'Cut 1/4" sheet 1 of 1',
+      ]);
+      final titles = s.map((e) => e.title).toList();
+      expect(
+        titles.indexOf('Cut 1/4" sheet 1 of 1'),
+        lessThan(titles.indexOf('Label every piece')),
+      );
+      expect(
+        titles.indexOf('Rip and cut the parts'),
+        lessThan(titles.indexOf('Cut 3/4" sheet 1 of 3')),
+      );
+    });
+
+    test('each sheet step has a to-scale picture', () {
+      for (final c in cuts) {
+        expect(c.diagrams.single.large, isTrue);
+        expect(c.diagrams.single.width, greaterThan(96));
+      }
+    });
+
+    test('the rip marks come from the top long edge', () {
+      final text = textOf(cuts.first);
+      expect(text, contains('Rip 4 strips'));
+      expect(text, contains('11 1/16", 22 3/16", 33 3/8", 44 1/2"'));
+      expect(text, contains('waste side'));
+    });
+
+    test('every strip lists its pieces and crosscut marks', () {
+      final text = textOf(cuts.first);
+      expect(text, contains('Strip 1 (11 1/16" wide): A1 76", D1 12 9/16"'));
+      expect(text, contains('Crosscut marks from the left end: 76", 88 11/16"'));
+    });
+
+    test('a legend gives the size of every part on the sheet', () {
+      final text = textOf(cuts.first);
+      expect(text, contains('A1 top panel: 76" by 11 1/16"'));
+      expect(text, contains('D1 to D4 left column shelf: 12 9/16" by 11 1/16"'));
+    });
+
+    test('ids that do not run in order are listed one by one', () {
+      final text = cuts.map(textOf).join('\n');
+      expect(text, isNot(contains('D1 to D3 left column shelf')));
+    });
+
+    test('backs say they are cut 1/16 inch under on every edge', () {
+      final text = textOf(cuts.last);
+      expect(text, contains('75 7/8" by 13 7/8"'));
+      expect(text, contains('cut list 76" by 14"'));
+      expect(text, contains('1/16" under on every edge'));
+    });
+
+    test('the sheet steps name the cutting tools', () {
+      final tools = cuts.first.tools.join(' ');
+      expect(tools, contains('Circular saw'));
+      expect(tools, contains('Clamps'));
+    });
+
+    test('a back bigger than a sheet is cut in pieces to be joined', () {
+      final home = builder.build(planFor(Inputs.home));
+      final text = home
+          .where((e) => e.title.startsWith('Cut 1/4"'))
+          .map(textOf)
+          .join('\n');
+      expect(text, contains('bigger than a sheet'));
+      expect(text, contains('backer strip'));
+    });
+
+    test('the sheet counts match the materials step', () {
+      final p = planFor();
+      expect(
+        cuts.where((e) => e.title.contains('3/4"')).length,
+        p.sheets.sheets34,
+      );
+      expect(
+        cuts.where((e) => e.title.contains('1/4"')).length,
+        p.sheets.backSheets,
       );
     });
   });

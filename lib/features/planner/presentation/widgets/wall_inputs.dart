@@ -54,19 +54,34 @@ class WallInputs extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Concrete or masonry wall'),
+          subtitle: const Text('Changes how the cleat is fastened'),
+          value: inputs.concreteWall,
+          onChanged: (v) => onChanged(inputs.copyWith(concreteWall: v)),
+        ),
+        if (!inputs.concreteWall)
+          DimField(
+            label: 'Stud spacing (on center)',
+            value: inputs.studSpacing,
+            min: InputRanges.studSpacingMin,
+            max: InputRanges.studSpacingMax,
+            onChanged: (v) => onChanged(inputs.copyWith(studSpacing: v)),
+          ),
         DimField(
           label: 'Wall width',
           value: inputs.wallW,
           slider: false,
-          optional: true,
-          onChanged: (v) => onChanged(inputs.copyWith(wallW: () => v)),
+          onCleared: () => onChanged(inputs.copyWith(wallW: null)),
+          onChanged: (v) => onChanged(inputs.copyWith(wallW: v)),
         ),
         DimField(
           label: 'Wall height',
           value: inputs.wallH,
           slider: false,
-          optional: true,
-          onChanged: (v) => onChanged(inputs.copyWith(wallH: () => v)),
+          onCleared: () => onChanged(inputs.copyWith(wallH: null)),
+          onChanged: (v) => onChanged(inputs.copyWith(wallH: v)),
         ),
         if (wallW != null || inputs.wallH != null) ...[
           const SectionHeading('Keep clear of'),
@@ -113,7 +128,7 @@ class WallInputs extends StatelessWidget {
               max: maxX,
               allowZero: true,
               onChanged: (v) =>
-                  onChanged(inputs.copyWith(windowFromWallLeft: () => v)),
+                  onChanged(inputs.copyWith(windowFromWallLeft: v)),
             ),
           if (inputs.wallH != null)
             DimField(
@@ -122,16 +137,15 @@ class WallInputs extends StatelessWidget {
               min: minY,
               max: maxY,
               allowZero: true,
-              onChanged: (v) =>
-                  onChanged(inputs.copyWith(windowFromFloor: () => v)),
+              onChanged: (v) => onChanged(inputs.copyWith(windowFromFloor: v)),
             ),
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton(
               onPressed: () => onChanged(
                 inputs.copyWith(
-                  windowFromWallLeft: () => null,
-                  windowFromFloor: () => null,
+                  windowFromWallLeft: null,
+                  windowFromFloor: null,
                 ),
               ),
               child: const Text('Center window on wall'),

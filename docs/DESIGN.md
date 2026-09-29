@@ -61,7 +61,22 @@ Fastener rules live in `Fasteners`: screws go 1" in from the front and back edge
 
 Build order: the columns are built flat, each bar is built as a unit with its long top or bottom panel, and the ring is then assembled lying on its back (every panel standing on its back edge). The edge band and toe kick go on with the unit still on its back, then the unit is flipped onto its front for the four back panels and the unit half of the cleat.
 
+Each step also lists the **tools** it uses, each with what it is for ("Drill with a 1/8" bit: drills the pilot hole for every screw"), and the **hardware** with counts. The hardware is read from the pieces strip of the step's first picture, so the counts always match the picture. Every step has a tick box in the PDF.
+
+**Checkpoints** follow each major stage (each column, each bar unit, the ring, the backs, the unit half of the cleat, and the finished unit on the wall). A checkpoint shows what the build should look like at that point and lists what to check, one tick box per line. The ring and finished-unit checkpoints use the to-scale front view with every piece id written on it.
+
+The last page of the guide, "Where every piece goes", repeats the main drawing with the id of every panel written beside it (shelves just above their line, dividers just to the right, column panels just inside their column), plus the back with its four panels. It is built from `Geometry.panelNames`, which names each drawn panel so its id can be looked up.
+
 Pictures are `AssemblyDiagram`s: flat, not to scale, with piece ids on the shapes, arrows for movement, screw marks and dimension lines. They are built in the domain layer by `AssemblyDiagramBuilder` and drawn into the PDF by `PdfDiagram`. A test checks every point of every picture stays inside its canvas.
+
+## Wall type and stud spacing
+
+The wall half of the cleat is fastened differently depending on the wall.
+
+- **Stud wall** (default): the guide finds the studs, and the wall piece takes two 3" screws into every stud it crosses, 1" below the top edge and 1" above the bottom edge. `Inputs.studSpacing` (12" to 24", default 16") sets how many studs a piece crosses and so the screw count. The starting home layout uses 18".
+- **Concrete or masonry wall** (`Inputs.concreteWall`): there are no studs. The guide checks the wall type first (hollow block needs sleeve or hollow-wall anchors instead), drills 7/32" clearance holes through the cleat piece, drills 5/32" holes about 1-3/4" deep with a hammer drill and carbide bit, blows the dust out, and drives 3/16" x 2-1/4" concrete screws in pairs: one pair 1-1/2" from each end and another at least every 12". The tools list, shopping list, wall note and screw counts follow. These are common rules of thumb: follow the screw package for hole size, depth, edge distance and load, and never drill into a mortar joint.
+
+Concrete screws and masonry tools have no recorded price, so they show as unpriced rather than guessed.
 
 ## Trim and gap
 

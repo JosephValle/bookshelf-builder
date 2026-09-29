@@ -1,14 +1,21 @@
+import 'package:bookshelf_builder/features/planner/domain/models/limits.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/sides.dart';
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'inputs.freezed.dart';
+part 'inputs.g.dart';
 
 /// Every value the user can change. Immutable; use [copyWith] to derive edits.
 ///
 /// All lengths are in inches. The defaults describe a 48" square window with
 /// 14" columns and bars on a 3.5" toe kick.
-class Inputs extends Equatable {
+@freezed
+abstract class Inputs with _$Inputs {
+  const Inputs._();
+
   /// The layout the app starts with: a 51 3/4" by 38" window, 57" from the
   /// left of a 140" by 96" wall and 42" off the floor, with 4" kept clear at
-  /// the ceiling for a leaning book ladder.
+  /// the ceiling for a leaning book ladder and studs 18" apart.
   static const home = Inputs(
     windowW: 51.75,
     windowH: 38,
@@ -17,70 +24,116 @@ class Inputs extends Equatable {
     wallMarginTop: 4,
     windowFromWallLeft: 57,
     windowFromFloor: 42,
+    studSpacing: 18,
   );
 
   /// Creates inputs, defaulting to the standard starting layout.
-  const Inputs({
-    this.windowW = 48,
-    this.windowH = 48,
-    this.left = 14,
-    this.right = 14,
-    this.top = 14,
-    this.bottom = 14,
-    this.depth = 11.25,
-    this.onFloor = true,
-    this.toeKick = 3.5,
-    this.targetClearH = 11,
-    this.edgeStiffener = false,
-    this.maxShelfWidth = 24,
-    this.fillWall = true,
-    this.wallW,
-    this.wallH,
-    this.wallMarginTop = 0,
-    this.wallMarginLeft = 0,
-    this.wallMarginRight = 0,
-    this.windowFromWallLeft,
-    this.windowFromFloor,
-    this.trimTop = 0,
-    this.trimBottom = 0,
-    this.trimLeft = 0,
-    this.trimRight = 0,
-    this.gapTop = 0,
-    this.gapBottom = 0,
-    this.gapLeft = 0,
-    this.gapRight = 0,
-  });
+  const factory Inputs({
+    /// Window width (the glass or frame you are building around).
+    @Default(48) double windowW,
 
-  /// Window width (the glass or frame you are building around).
-  final double windowW;
+    /// Window height.
+    @Default(48) double windowH,
 
-  /// Window height.
-  final double windowH;
+    /// Trim (casing) on the window's top side. Trim is the boards around the
+    /// window itself; gaps are extra clearance beyond the trim.
+    @Default(0) double trimTop,
 
-  /// Trim (casing) on the window's top side. Trim is the boards around the
-  /// window itself; gaps are extra clearance beyond the trim.
-  final double trimTop;
+    /// Trim on the window's bottom side.
+    @Default(0) double trimBottom,
 
-  /// Trim on the window's bottom side.
-  final double trimBottom;
+    /// Trim on the window's left side.
+    @Default(0) double trimLeft,
 
-  /// Trim on the window's left side.
-  final double trimLeft;
+    /// Trim on the window's right side.
+    @Default(0) double trimRight,
 
-  /// Trim on the window's right side.
-  final double trimRight;
+    /// Clearance left between the trim (or the window) and the shelves above.
+    @Default(0) double gapTop,
 
-  /// Clearance left between the trim (or the window) and the shelves above.
-  final double gapTop;
+    /// Clearance between the trim (or the window) and the shelves below.
+    @Default(0) double gapBottom,
 
-  /// Clearance between the trim (or the window) and the shelves below.
-  final double gapBottom;
+    /// Clearance between the trim (or the window) and the left column.
+    @Default(0) double gapLeft,
 
-  /// Clearance between the trim (or the window) and the left column.
-  final double gapLeft;
+    /// Clearance between the trim (or the window) and the right column.
+    @Default(0) double gapRight,
 
-  /// Clearance between the trim (or the window) and the right column.
-  final double gapRight;
+    /// Left column outer width.
+    @Default(14) double left,
+
+    /// Right column outer width.
+    @Default(14) double right,
+
+    /// Top bar height from ring top to window top.
+    @Default(14) double top,
+
+    /// Bottom bar height from window bottom to ring bottom, including the kick.
+    @Default(14) double bottom,
+
+    /// Total depth including the back panel.
+    @Default(11.25) double depth,
+
+    /// Whether the ring sits on a toe kick on the floor.
+    @Default(true) bool onFloor,
+
+    /// Toe kick height, used only when [onFloor] is true.
+    @Default(3.5) double toeKick,
+
+    /// Desired shelf opening height in the columns.
+    @Default(11) double targetClearH,
+
+    /// Whether a solid front edge band is added to horizontal panels.
+    @Default(false) bool edgeStiffener,
+
+    /// Preferred maximum clear shelf width. Dividers are added whenever a bay
+    /// would be wider, and it is capped by the structural span limits.
+    @Default(24) double maxShelfWidth,
+
+    /// Whether the columns grow to fill the whole wall width when a wall width
+    /// is set. When false the ring keeps its column widths and sits on the wall.
+    @Default(true) bool fillWall,
+
+    /// Whether the wall is concrete or masonry instead of studs and drywall.
+    /// It changes how the wall half of the cleat is fastened and which tools
+    /// and fasteners the guide calls for.
+    @Default(false) bool concreteWall,
+
+    /// Distance between the wall studs, center to center. Used to count the
+    /// screws for the wall half of the cleat. Ignored for a concrete wall.
+    @Default(Limits.studSpacing) double studSpacing,
+
+    /// Optional wall width.
+    double? wallW,
+
+    /// Optional wall height (floor to ceiling) for fit checks.
+    double? wallH,
+
+    /// Distance from the ceiling that the shelves must stay clear of (crown
+    /// molding, a soffit). Used with [wallH].
+    @Default(0) double wallMarginTop,
+
+    /// Distance from the wall's left edge that the shelves must stay clear of
+    /// (a door, trim, an adjacent cabinet). Used with [wallW].
+    @Default(0) double wallMarginLeft,
+
+    /// Distance from the wall's right edge that the shelves must stay clear of.
+    /// Used with [wallW]. The bottom of the wall is the floor, so it has no
+    /// margin.
+    @Default(0) double wallMarginRight,
+
+    /// Optional distance from the wall's left edge to the window's left edge.
+    /// Centered on the wall when unset.
+    double? windowFromWallLeft,
+
+    /// Optional distance from the floor to the window's bottom edge. Centered
+    /// between the floor and the top margin when unset.
+    double? windowFromFloor,
+  }) = _Inputs;
+
+  /// Reads inputs from a JSON map, using the defaults for missing values.
+  factory Inputs.fromJson(Map<String, dynamic> json) => _$InputsFromJson(json);
 
   /// The trim on all four sides.
   Sides get trim =>
@@ -110,68 +163,6 @@ class Inputs extends Equatable {
   /// Height of the framed opening: the window plus its trim and gaps on the
   /// top and bottom.
   double get openH => windowH + insetTop + insetBottom;
-
-  /// Left column outer width.
-  final double left;
-
-  /// Right column outer width.
-  final double right;
-
-  /// Top bar height from ring top to window top.
-  final double top;
-
-  /// Bottom bar height from window bottom to ring bottom, including the kick.
-  final double bottom;
-
-  /// Total depth including the back panel.
-  final double depth;
-
-  /// Whether the ring sits on a toe kick on the floor.
-  final bool onFloor;
-
-  /// Toe kick height, used only when [onFloor] is true.
-  final double toeKick;
-
-  /// Desired shelf opening height in the columns.
-  final double targetClearH;
-
-  /// Whether a solid front edge band is added to horizontal panels.
-  final bool edgeStiffener;
-
-  /// Preferred maximum clear shelf width. Dividers are added whenever a bay
-  /// would be wider, and it is capped by the structural span limits.
-  final double maxShelfWidth;
-
-  /// Whether the columns grow to fill the whole wall width when a wall width
-  /// is set. When false the ring keeps its column widths and sits on the wall.
-  final bool fillWall;
-
-  /// Optional wall width.
-  final double? wallW;
-
-  /// Optional wall height (floor to ceiling) for fit checks.
-  final double? wallH;
-
-  /// Distance from the ceiling that the shelves must stay clear of (crown
-  /// molding, a soffit). Used with [wallH].
-  final double wallMarginTop;
-
-  /// Distance from the wall's left edge that the shelves must stay clear of
-  /// (a door, trim, an adjacent cabinet). Used with [wallW].
-  final double wallMarginLeft;
-
-  /// Distance from the wall's right edge that the shelves must stay clear of.
-  /// Used with [wallW]. The bottom of the wall is the floor, so it has no
-  /// margin.
-  final double wallMarginRight;
-
-  /// Optional distance from the wall's left edge to the window's left edge.
-  /// Centered on the wall when unset.
-  final double? windowFromWallLeft;
-
-  /// Optional distance from the floor to the window's bottom edge. Centered
-  /// between the floor and the top margin when unset.
-  final double? windowFromFloor;
 
   /// Width of the wall between the left and right margins, or null when no
   /// wall width is set. Never negative.
@@ -255,106 +246,4 @@ class Inputs extends Equatable {
     }
     return r;
   }
-
-  /// Returns a copy with the given fields replaced.
-  ///
-  /// The optional wall fields take a callback so that they can be cleared:
-  /// pass `() => null` to set one back to unset.
-  Inputs copyWith({
-    double? windowW,
-    double? windowH,
-    double? left,
-    double? right,
-    double? top,
-    double? bottom,
-    double? depth,
-    bool? onFloor,
-    double? toeKick,
-    double? targetClearH,
-    bool? edgeStiffener,
-    double? maxShelfWidth,
-    bool? fillWall,
-    double? Function()? wallW,
-    double? Function()? wallH,
-    double? wallMarginTop,
-    double? wallMarginLeft,
-    double? wallMarginRight,
-    double? Function()? windowFromWallLeft,
-    double? Function()? windowFromFloor,
-    double? trimTop,
-    double? trimBottom,
-    double? trimLeft,
-    double? trimRight,
-    double? gapTop,
-    double? gapBottom,
-    double? gapLeft,
-    double? gapRight,
-  }) {
-    return Inputs(
-      windowW: windowW ?? this.windowW,
-      windowH: windowH ?? this.windowH,
-      left: left ?? this.left,
-      right: right ?? this.right,
-      top: top ?? this.top,
-      bottom: bottom ?? this.bottom,
-      depth: depth ?? this.depth,
-      onFloor: onFloor ?? this.onFloor,
-      toeKick: toeKick ?? this.toeKick,
-      targetClearH: targetClearH ?? this.targetClearH,
-      edgeStiffener: edgeStiffener ?? this.edgeStiffener,
-      maxShelfWidth: maxShelfWidth ?? this.maxShelfWidth,
-      fillWall: fillWall ?? this.fillWall,
-      wallW: wallW != null ? wallW() : this.wallW,
-      wallH: wallH != null ? wallH() : this.wallH,
-      wallMarginTop: wallMarginTop ?? this.wallMarginTop,
-      wallMarginLeft: wallMarginLeft ?? this.wallMarginLeft,
-      wallMarginRight: wallMarginRight ?? this.wallMarginRight,
-      windowFromWallLeft: windowFromWallLeft != null
-          ? windowFromWallLeft()
-          : this.windowFromWallLeft,
-      windowFromFloor: windowFromFloor != null
-          ? windowFromFloor()
-          : this.windowFromFloor,
-      trimTop: trimTop ?? this.trimTop,
-      trimBottom: trimBottom ?? this.trimBottom,
-      trimLeft: trimLeft ?? this.trimLeft,
-      trimRight: trimRight ?? this.trimRight,
-      gapTop: gapTop ?? this.gapTop,
-      gapBottom: gapBottom ?? this.gapBottom,
-      gapLeft: gapLeft ?? this.gapLeft,
-      gapRight: gapRight ?? this.gapRight,
-    );
-  }
-
-  @override
-  List<Object?> get props => [
-    windowW,
-    windowH,
-    left,
-    right,
-    top,
-    bottom,
-    depth,
-    onFloor,
-    toeKick,
-    targetClearH,
-    edgeStiffener,
-    maxShelfWidth,
-    fillWall,
-    wallW,
-    wallH,
-    wallMarginTop,
-    wallMarginLeft,
-    wallMarginRight,
-    windowFromWallLeft,
-    windowFromFloor,
-    trimTop,
-    trimBottom,
-    trimLeft,
-    trimRight,
-    gapTop,
-    gapBottom,
-    gapLeft,
-    gapRight,
-  ];
 }

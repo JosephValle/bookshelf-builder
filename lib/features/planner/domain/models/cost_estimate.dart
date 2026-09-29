@@ -1,24 +1,25 @@
 import 'package:bookshelf_builder/features/planner/domain/models/cost_line.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/store_prices.dart';
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'cost_estimate.freezed.dart';
 
 /// The estimated cost of a plan at one store.
-class CostEstimate extends Equatable {
+@freezed
+abstract class CostEstimate with _$CostEstimate {
+  const CostEstimate._();
+
   /// Creates an estimate.
-  const CostEstimate({
-    required this.prices,
-    required this.lines,
-    this.taxRate = 0,
-  });
+  const factory CostEstimate({
+    /// Prices the estimate used.
+    required StorePrices prices,
 
-  /// Prices the estimate used.
-  final StorePrices prices;
+    /// What to buy and what it costs.
+    required List<CostLine> lines,
 
-  /// What to buy and what it costs.
-  final List<CostLine> lines;
-
-  /// Sales tax rate applied to the subtotal, for example 0.07.
-  final double taxRate;
+    /// Sales tax rate applied to the subtotal, for example 0.07.
+    @Default(0) double taxRate,
+  }) = _CostEstimate;
 
   /// Lines with no price.
   List<CostLine> get missing =>
@@ -39,7 +40,4 @@ class CostEstimate extends Equatable {
   /// Sum of the lines that do have a price.
   double get pricedSubtotal =>
       lines.fold<double>(0, (sum, l) => sum + (l.total ?? 0));
-
-  @override
-  List<Object?> get props => [prices, lines, taxRate];
 }

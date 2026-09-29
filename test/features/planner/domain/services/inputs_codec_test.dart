@@ -25,6 +25,8 @@ void main() {
         edgeStiffener: true,
         maxShelfWidth: 18,
         fillWall: false,
+        concreteWall: true,
+        studSpacing: 18,
         wallW: 120,
         wallH: 96,
         wallMarginTop: 3,
@@ -112,6 +114,26 @@ void main() {
       expect(i.maxShelfWidth, 24);
       expect(i.fillWall, isTrue);
       expect(i.gapLeft, 0);
+    });
+  });
+
+  group('wall fastening', () {
+    test('a concrete wall and stud spacing survive a round trip', () {
+      const i = Inputs(concreteWall: true, studSpacing: 18);
+      final back = codec.decode(codec.encode(i));
+      expect(back.concreteWall, isTrue);
+      expect(back.studSpacing, 18);
+    });
+
+    test('missing values fall back to a stud wall 16 inches apart', () {
+      final i = codec.decode({});
+      expect(i.concreteWall, isFalse);
+      expect(i.studSpacing, 16);
+    });
+
+    test('an invalid stud spacing falls back to 16', () {
+      expect(codec.decode({'studSpacing': -3}).studSpacing, 16);
+      expect(codec.decode({'studSpacing': 'wide'}).studSpacing, 16);
     });
   });
 }

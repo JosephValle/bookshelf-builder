@@ -1,17 +1,17 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'diagram_point.freezed.dart';
 
 /// A point on an assembly diagram. The diagrams are schematic, so the unit is
 /// abstract (not inches) and y grows downward.
-class DiagramPoint extends Equatable {
+@freezed
+abstract class DiagramPoint with _$DiagramPoint {
   /// Creates a point.
-  const DiagramPoint(this.x, this.y);
+  const factory DiagramPoint(
+    /// Horizontal position.
+    double x,
 
-  /// Horizontal position.
-  final double x;
-
-  /// Vertical position, growing downward.
-  final double y;
-
-  @override
-  List<Object?> get props => [x, y];
+    /// Vertical position, growing downward.
+    double y,
+  ) = _DiagramPoint;
 }

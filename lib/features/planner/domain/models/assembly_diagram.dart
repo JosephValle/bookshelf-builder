@@ -1,69 +1,53 @@
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_arrow.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_dimension.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/diagram_label.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_mark.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_piece.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_shape.dart';
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'assembly_diagram.freezed.dart';
 
 /// A rough, not to scale picture that goes with an assembly step.
-class AssemblyDiagram extends Equatable {
+@freezed
+abstract class AssemblyDiagram with _$AssemblyDiagram {
+  const AssemblyDiagram._();
+
   /// Creates a diagram.
-  const AssemblyDiagram({
-    required this.caption,
-    required this.width,
-    required this.height,
-    required this.shapes,
-    this.arrows = const [],
-    this.marks = const [],
-    this.dimensions = const [],
-    this.pieces = const [],
-  });
+  const factory AssemblyDiagram({
+    /// Says what the picture shows and what each piece letter is.
+    required String caption,
 
-  /// Says what the picture shows and what each piece letter is.
-  final String caption;
+    /// Width of the drawing area, in diagram units.
+    required double width,
 
-  /// Width of the drawing area, in diagram units.
-  final double width;
+    /// Height of the drawing area, in diagram units.
+    required double height,
 
-  /// Height of the drawing area, in diagram units.
-  final double height;
+    /// Shapes in painting order (later shapes are on top).
+    required List<DiagramShape> shapes,
 
-  /// Shapes in painting order (later shapes are on top).
-  final List<DiagramShape> shapes;
+    /// Arrows drawn over the shapes.
+    @Default([]) List<DiagramArrow> arrows,
 
-  /// Arrows drawn over the shapes.
-  final List<DiagramArrow> arrows;
+    /// Screws and brads, drawn over the shapes.
+    @Default([]) List<DiagramMark> marks,
 
-  /// Screws and brads, drawn over the shapes.
-  final List<DiagramMark> marks;
+    /// Measurement lines, for example the distance from an edge to a screw.
+    @Default([]) List<DiagramDimension> dimensions,
 
-  /// Measurement lines, for example the distance from an edge to a screw.
-  final List<DiagramDimension> dimensions;
+    /// The pieces and hardware this step uses.
+    @Default([]) List<DiagramPiece> pieces,
 
-  /// The pieces and hardware this step uses, shown as "2x A" style entries.
-  final List<DiagramPiece> pieces;
+    /// Free floating text such as the ids of thin panels.
+    @Default([]) List<DiagramLabel> labels,
+
+    /// True for a picture drawn at full page size, such as the labelled
+    /// elevation, instead of the small step size.
+    @Default(false) bool large,
+  }) = _AssemblyDiagram;
 
   /// Returns a copy with [pieces] in place of the current strip.
-  AssemblyDiagram withPieces(List<DiagramPiece> pieces) => AssemblyDiagram(
-    caption: caption,
-    width: width,
-    height: height,
-    shapes: shapes,
-    arrows: arrows,
-    marks: marks,
-    dimensions: dimensions,
-    pieces: pieces,
-  );
-
-  @override
-  List<Object?> get props => [
-    caption,
-    width,
-    height,
-    shapes,
-    arrows,
-    marks,
-    dimensions,
-    pieces,
-  ];
+  AssemblyDiagram withPieces(List<DiagramPiece> pieces) =>
+      copyWith(pieces: pieces);
 }

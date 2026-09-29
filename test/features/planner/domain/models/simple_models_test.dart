@@ -6,6 +6,7 @@ import 'package:bookshelf_builder/features/planner/domain/models/box.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/column_plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_arrow.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_dimension.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/diagram_label.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_mark.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_mark_kind.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_piece.dart';
@@ -119,5 +120,37 @@ void main() {
       const AssemblyStep('t', ['d'], diagrams: [b]),
     );
     expect(const AssemblyStep('t', ['d']).diagrams, isEmpty);
+  });
+
+  test('labels, copies and step extras compare by value', () {
+    expect(
+      const DiagramLabel(DiagramPoint(1, 2), 'D1'),
+      const DiagramLabel(DiagramPoint(1, 2), 'D1'),
+    );
+    expect(
+      const DiagramLabel(DiagramPoint(1, 2), 'D1'),
+      isNot(const DiagramLabel(DiagramPoint(1, 2), 'D2')),
+    );
+    const d = AssemblyDiagram(
+      caption: 'c',
+      width: 1,
+      height: 1,
+      shapes: [],
+      labels: [DiagramLabel(DiagramPoint(0, 0), 'A1')],
+    );
+    final copy = d.copyWith(caption: 'new', large: true);
+    expect(copy.caption, 'new');
+    expect(copy.large, isTrue);
+    expect(copy.labels, d.labels);
+    expect(d.copyWith(), d);
+    const a = AssemblyStep('t', ['d'], tools: ['saw: cuts']);
+    expect(a, const AssemblyStep('t', ['d'], tools: ['saw: cuts']));
+    expect(a, isNot(const AssemblyStep('t', ['d'])));
+    expect(
+      const AssemblyStep('t', ['d'], hardware: ['1 x screw']),
+      isNot(const AssemblyStep('t', ['d'])),
+    );
+    expect(const AssemblyStep('t', ['d'], checkpoint: true).checkpoint, isTrue);
+    expect(const AssemblyStep('t', ['d']).checkpoint, isFalse);
   });
 }

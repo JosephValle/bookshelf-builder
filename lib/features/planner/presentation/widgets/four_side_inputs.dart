@@ -50,9 +50,7 @@ class _FourSideInputsState extends State<FourSideInputs> {
       min: widget.min,
       max: widget.max,
       allowZero: true,
-      onChanged: (v) {
-        if (v != null) widget.onChanged(apply(v));
-      },
+      onChanged: (v) => widget.onChanged(apply(v)),
     );
   }
 

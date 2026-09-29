@@ -112,7 +112,7 @@ void main() {
         (i) => i.copyWith(
           left: 20,
           maxShelfWidth: 16,
-          wallW: () => 120,
+          wallW: 120,
           fillWall: false,
         ),
       );
@@ -131,7 +131,7 @@ void main() {
 
     test('resolved wall inputs drive the plan', () {
       final cubit = build();
-      cubit.update((i) => i.copyWith(wallW: () => 120));
+      cubit.update((i) => i.copyWith(wallW: 120));
       expect(cubit.state.plan.ringW, 120);
       expect(cubit.state.inputs.left, 14);
       expect(cubit.state.plan.inputs.left, 36);

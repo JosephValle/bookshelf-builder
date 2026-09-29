@@ -8,53 +8,47 @@ import 'package:bookshelf_builder/features/planner/domain/models/part.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/severity.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/sheet_plan.dart';
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'plan.freezed.dart';
 
 /// The complete result of planning one set of [Inputs].
-class Plan extends Equatable {
+@freezed
+abstract class Plan with _$Plan {
+  const Plan._();
+
   /// Creates a plan.
-  const Plan({
-    required this.inputs,
-    required this.dimensions,
-    required this.leftCol,
-    required this.rightCol,
-    required this.topBar,
-    required this.bottomBar,
-    required this.parts,
-    required this.geometry,
-    required this.sheets,
-    required this.issues,
-  });
+  const factory Plan({
+    /// The inputs this plan was computed from.
+    required Inputs inputs,
 
-  /// The inputs this plan was computed from.
-  final Inputs inputs;
+    /// Derived overall dimensions.
+    required Dimensions dimensions,
 
-  /// Derived overall dimensions.
-  final Dimensions dimensions;
+    /// Left column layout.
+    required ColumnPlan leftCol,
 
-  /// Left column layout.
-  final ColumnPlan leftCol;
+    /// Right column layout.
+    required ColumnPlan rightCol,
 
-  /// Right column layout.
-  final ColumnPlan rightCol;
+    /// Top bar layout.
+    required BarPlan topBar,
 
-  /// Top bar layout.
-  final BarPlan topBar;
+    /// Bottom bar layout.
+    required BarPlan bottomBar,
 
-  /// Bottom bar layout.
-  final BarPlan bottomBar;
+    /// The cut list.
+    required List<Part> parts,
 
-  /// The cut list.
-  final List<Part> parts;
+    /// Drawable layout.
+    required Geometry geometry,
 
-  /// Drawable layout.
-  final Geometry geometry;
+    /// Plywood sheet estimate.
+    required SheetPlan sheets,
 
-  /// Plywood sheet estimate.
-  final SheetPlan sheets;
-
-  /// Warnings, errors and notes.
-  final List<Issue> issues;
+    /// Warnings, errors and notes.
+    required List<Issue> issues,
+  }) = _Plan;
 
   /// Overall ring width.
   double get ringW => dimensions.ringW;
@@ -93,18 +87,4 @@ class Plan extends Equatable {
   double get edgeBandInches => parts
       .where((p) => p.material == PartMaterial.edgeBand)
       .fold(0.0, (sum, p) => sum + p.length);
-
-  @override
-  List<Object?> get props => [
-    inputs,
-    dimensions,
-    leftCol,
-    rightCol,
-    topBar,
-    bottomBar,
-    parts,
-    geometry,
-    sheets,
-    issues,
-  ];
 }

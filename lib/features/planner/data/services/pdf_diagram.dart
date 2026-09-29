@@ -17,6 +17,8 @@ class PdfDiagram {
 
   static const double _maxW = 330;
   static const double _maxH = 210;
+  static const double _largeW = 470;
+  static const double _largeH = 400;
 
   static PdfColor _fill(DiagramTone tone) => switch (tone) {
     DiagramTone.panel => PdfStyles.diagramPanel,
@@ -31,7 +33,9 @@ class PdfDiagram {
 
   /// Builds the widget for [d].
   static pw.Widget build(AssemblyDiagram d) {
-    final s = math.min(_maxW / d.width, _maxH / d.height);
+    final s = d.large
+        ? math.min(_largeW / d.width, _largeH / d.height)
+        : math.min(_maxW / d.width, _maxH / d.height);
     final w = d.width * s;
     final h = d.height * s;
     pw.Widget text(
@@ -83,14 +87,25 @@ class PdfDiagram {
                         color: _ink(shape.tone),
                       ),
                     ),
+                for (final label in d.labels)
+                  text(
+                    label.text,
+                    label.at.x,
+                    label.at.y,
+                    const pw.TextStyle(
+                      fontSize: 6.5,
+                      color: PdfStyles.diagramInk,
+                    ),
+                    boxW: 24,
+                  ),
                 for (final dim in d.dimensions)
                   text(
                     dim.text,
                     (dim.from.x + dim.to.x) / 2,
                     (dim.from.y + dim.to.y) / 2,
-                    const pw.TextStyle(
+                    pw.TextStyle(
                       fontSize: 7.5,
-                      color: PdfStyles.diagramDim,
+                      color: dim.light ? PdfColors.white : PdfStyles.diagramDim,
                     ),
                     boxW: 50,
                     // Keep the text clear of its own line: above a horizontal
@@ -165,7 +180,7 @@ class PdfDiagram {
     }
     for (final dim in d.dimensions) {
       canvas
-        ..setStrokeColor(PdfStyles.diagramDim)
+        ..setStrokeColor(dim.light ? PdfColors.white : PdfStyles.diagramDim)
         ..setLineWidth(0.5)
         ..moveTo(x(dim.from.x), y(dim.from.y))
         ..lineTo(x(dim.to.x), y(dim.to.y))

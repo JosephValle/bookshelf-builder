@@ -1,31 +1,25 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'bar_plan.freezed.dart';
 
 /// Divider and tier layout of the top or bottom bar.
-class BarPlan extends Equatable {
+@freezed
+abstract class BarPlan with _$BarPlan {
   /// Creates a bar plan.
-  const BarPlan({
-    required this.dividers,
-    required this.dividerLength,
-    required this.bayW,
-    required this.clearH,
-    required this.tiers,
-  });
+  const factory BarPlan({
+    /// Number of vertical dividers across the window width.
+    required int dividers,
 
-  /// Number of vertical dividers across the window width.
-  final int dividers;
+    /// Length of each divider (the bar clear height).
+    required double dividerLength,
 
-  /// Length of each divider (the bar clear height).
-  final double dividerLength;
+    /// Clear bay width between dividers.
+    required double bayW,
 
-  /// Clear bay width between dividers.
-  final double bayW;
+    /// Clear height inside the bar.
+    required double clearH,
 
-  /// Clear height inside the bar.
-  final double clearH;
-
-  /// One or two rows of bays.
-  final int tiers;
-
-  @override
-  List<Object?> get props => [dividers, dividerLength, bayW, clearH, tiers];
+    /// One or two rows of bays.
+    required int tiers,
+  }) = _BarPlan;
 }

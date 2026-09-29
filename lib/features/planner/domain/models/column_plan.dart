@@ -1,35 +1,28 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'column_plan.freezed.dart';
 
 /// Shelf and divider layout of one side column.
-class ColumnPlan extends Equatable {
+@freezed
+abstract class ColumnPlan with _$ColumnPlan {
   /// Creates a column plan.
-  const ColumnPlan({
-    required this.colW,
-    required this.clearW,
-    required this.shelves,
-    required this.clearH,
-    required this.dividers,
-    required this.bayW,
-  });
+  const factory ColumnPlan({
+    /// Outer column width.
+    required double colW,
 
-  /// Outer column width.
-  final double colW;
+    /// Clear width between the two column panels.
+    required double clearW,
 
-  /// Clear width between the two column panels.
-  final double clearW;
+    /// Number of fixed shelves in the column.
+    required int shelves,
 
-  /// Number of fixed shelves in the column.
-  final int shelves;
+    /// Clear opening height between shelves.
+    required double clearH,
 
-  /// Clear opening height between shelves.
-  final double clearH;
+    /// Vertical dividers per opening (zero when the span is short enough).
+    required int dividers,
 
-  /// Vertical dividers per opening (zero when the span is short enough).
-  final int dividers;
-
-  /// Clear bay width after dividers.
-  final double bayW;
-
-  @override
-  List<Object?> get props => [colW, clearW, shelves, clearH, dividers, bayW];
+    /// Clear bay width after dividers.
+    required double bayW,
+  }) = _ColumnPlan;
 }

@@ -226,4 +226,29 @@ void main() {
       expect(current.windowFromFloor, isNull);
     });
   });
+
+  group('wall fastening', () {
+    testWidgets('the concrete switch toggles concreteWall', (tester) async {
+      await pump(tester);
+      await tester.tap(find.text('Concrete or masonry wall'));
+      await tester.pump();
+      expect(current.concreteWall, isTrue);
+    });
+
+    testWidgets('stud spacing is editable on a stud wall', (tester) async {
+      await pump(tester);
+      expect(find.text('Stud spacing (on center)'), findsOneWidget);
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Stud spacing (on center)'),
+        '18',
+      );
+      await tester.pump();
+      expect(current.studSpacing, 18);
+    });
+
+    testWidgets('stud spacing is hidden on a concrete wall', (tester) async {
+      await pump(tester, start: const Inputs(concreteWall: true));
+      expect(find.text('Stud spacing (on center)'), findsNothing);
+    });
+  });
 }

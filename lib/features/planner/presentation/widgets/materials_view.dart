@@ -63,10 +63,10 @@ class MaterialsView extends StatelessWidget {
           icon: Icons.storefront_outlined,
           child: Text(PlannerNotes.store),
         ),
-        const SectionCard(
+        SectionCard(
           title: 'Wall attachment',
           icon: Icons.home_outlined,
-          child: Text(PlannerNotes.wall),
+          child: Text(PlannerNotes.wallFor(concrete: plan.inputs.concreteWall)),
         ),
       ],
     );

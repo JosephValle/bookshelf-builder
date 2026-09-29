@@ -1,23 +1,19 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'tool_recommendation.freezed.dart';
 
 /// One recommended tool or supply.
-class ToolRecommendation extends Equatable {
+@freezed
+abstract class ToolRecommendation with _$ToolRecommendation {
   /// Creates a recommendation.
-  const ToolRecommendation({
-    required this.name,
-    required this.reason,
-    this.essential = true,
-  });
+  const factory ToolRecommendation({
+    /// What to get, for example "Cordless drill/driver".
+    required String name,
 
-  /// What to get, for example "Cordless drill/driver".
-  final String name;
+    /// Why this plan needs it.
+    required String reason,
 
-  /// Why this plan needs it.
-  final String reason;
-
-  /// False for nice-to-have items.
-  final bool essential;
-
-  @override
-  List<Object?> get props => [name, reason, essential];
+    /// False for nice-to-have items.
+    @Default(true) bool essential,
+  }) = _ToolRecommendation;
 }

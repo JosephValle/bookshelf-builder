@@ -10,7 +10,7 @@ lib/
     theme/                        design tokens and the light and dark themes
   features/planner/
     domain/
-      models/                     immutable value objects (one class per file)
+      models/                     immutable value objects (freezed, one class per file)
       services/                   pure logic and abstract ports
     data/
       services/                   implementations of the ports
@@ -23,6 +23,7 @@ lib/
 ## Rules
 
 - **One public class per file**, named after the file.
+- **Models are generated.** Domain models are `@freezed` classes; run `dart run build_runner build` after changing one. Generated `*.freezed.dart` and `*.g.dart` files are committed and excluded from analysis. `Inputs` is the only model with JSON (`toJson` and `fromJson`), and `InputsCodec` wraps it to add forgiving validation.
 - **Domain code is pure Dart.** It never imports Flutter widgets or another layer's `presentation/`, so the whole planning engine can be tested without a UI.
 - **Ports live in `domain/services/`**, their implementations in `data/`. Tests inject fakes (`test/features/planner/support/`).
 - **Styling is centralised** in `lib/app/theme/`. Widgets take colors from the theme's `ColorScheme` and never hard-code paddings, radii, sizes or breakpoints.
@@ -38,7 +39,7 @@ user edits a field
    -> InputsStore.save(inputs)
 ```
 
-`Inputs` is immutable and compared by value, so an edit that changes nothing does not recompute or save. Every field must be listed in `Inputs.props`; a test fails if one is missing.
+`Inputs` is immutable and compared by value, so an edit that changes nothing does not recompute or save. Equality is generated from the constructor parameters, so every field takes part automatically; a test fails if a field is not in the JSON and equality.
 
 `PlanEngine` is a chain of small services:
 
@@ -52,7 +53,7 @@ user edits a field
 | `SheetEstimator` | Plywood sheet count |
 | `IssueChecker` | Warnings, errors and notes |
 
-Around the plan there are a few more services: `CostEstimator` (prices the sheets), `ToolRecommender`, `AssemblyGuideBuilder` (with `AssemblyDiagramBuilder`, `PieceIds`, `FastenerCounter` and `CleatLayout` behind it), and the `CutListCsvBuilder` and `SummaryBuilder` text exporters. The screen, the PDF and the text exports all read from the same `Plan`.
+Around the plan there are a few more services: `CostEstimator` (prices the sheets), `ToolRecommender`, `AssemblyGuideBuilder` (tools, hardware, checkpoints and the piece map; with `AssemblyDiagramBuilder`, `PieceIds`, `FastenerCounter` and `CleatLayout` behind it), and the `CutListCsvBuilder` and `SummaryBuilder` text exporters. The screen, the PDF and the text exports all read from the same `Plan`.
 
 Before any of that, `Inputs.resolved` grows the columns and bars to fill the wall when a wall size is set.
 
@@ -66,7 +67,9 @@ Before any of that, `Inputs.resolved` grows the columns and bars to fill the wal
 
 | Package | Used for |
 |---|---|
-| `flutter_bloc`, `equatable` | State management and value equality |
+| `flutter_bloc`, `equatable` | State management and value equality for cubit states |
+| `freezed_annotation`, `json_annotation` | Annotations used by the generated models |
+| `build_runner`, `freezed`, `json_serializable` (dev) | Generate `copyWith`, equality and JSON for the models |
 | `pdf`, `printing` | Building the PDF and opening the print dialog |
 | `shared_preferences` | Remembering inputs and pane widths |
 | `bloc_test` (dev) | Testing cubits |

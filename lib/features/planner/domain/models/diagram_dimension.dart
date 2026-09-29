@@ -1,21 +1,26 @@
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_point.dart';
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'diagram_dimension.freezed.dart';
 
 /// A measurement line on an assembly diagram, such as the 1" from the edge to
 /// a screw.
-class DiagramDimension extends Equatable {
-  /// Creates a dimension line from [from] to [to] labelled [text].
-  const DiagramDimension(this.from, this.to, this.text);
+@freezed
+abstract class DiagramDimension with _$DiagramDimension {
+  /// Creates a dimension line from one point to another, labelled with the
+  /// measurement.
+  const factory DiagramDimension(
+    /// One end of the measured distance.
+    DiagramPoint from,
 
-  /// One end of the measured distance.
-  final DiagramPoint from;
+    /// The other end of the measured distance.
+    DiagramPoint to,
 
-  /// The other end of the measured distance.
-  final DiagramPoint to;
+    /// The measurement, for example `1"`.
+    String text, {
 
-  /// The measurement, for example `1"`.
-  final String text;
-
-  @override
-  List<Object?> get props => [from, to, text];
+    /// True to draw the line and text in white, for a measurement written
+    /// on a dark shape.
+    @Default(false) bool light,
+  }) = _DiagramDimension;
 }

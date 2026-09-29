@@ -1,25 +1,25 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'box.freezed.dart';
 
 /// An axis aligned rectangle in inches.
 ///
 /// The origin is the top left corner of the ring and y grows downward, so a
 /// box maps directly onto the elevation drawing.
-class Box extends Equatable {
+@freezed
+abstract class Box with _$Box {
   /// Creates a box.
-  const Box(this.x, this.y, this.w, this.h);
+  const factory Box(
+    /// Left edge.
+    double x,
 
-  /// Left edge.
-  final double x;
+    /// Top edge.
+    double y,
 
-  /// Top edge.
-  final double y;
+    /// Width.
+    double w,
 
-  /// Width.
-  final double w;
-
-  /// Height.
-  final double h;
-
-  @override
-  List<Object?> get props => [x, y, w, h];
+    /// Height.
+    double h,
+  ) = _Box;
 }

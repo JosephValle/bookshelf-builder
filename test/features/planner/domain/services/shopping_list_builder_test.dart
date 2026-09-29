@@ -35,4 +35,31 @@ void main() {
       expect(hung.any((i) => i.id == 'shims'), isFalse);
     });
   });
+
+  group('concrete wall', () {
+    final stud = const ShoppingListBuilder().build(planFor());
+    final concrete = const ShoppingListBuilder().build(
+      planFor(const Inputs(concreteWall: true)),
+    );
+
+    test('a stud wall lists structural screws and a stud finder', () {
+      expect(stud.any((i) => i.id == 'screws-structural'), isTrue);
+      expect(stud.any((i) => i.id == 'stud-finder'), isTrue);
+      expect(stud.any((i) => i.id == 'hammer-drill'), isFalse);
+    });
+
+    test('a concrete wall lists concrete screws and masonry tools', () {
+      expect(concrete.any((i) => i.id == 'screws-concrete'), isTrue);
+      expect(concrete.any((i) => i.id == 'hammer-drill'), isTrue);
+      expect(concrete.any((i) => i.id == 'blowout'), isTrue);
+      expect(concrete.any((i) => i.id == 'screws-structural'), isFalse);
+      expect(concrete.any((i) => i.id == 'stud-finder'), isFalse);
+    });
+
+    test('concrete items have no invented price', () {
+      for (final id in ['screws-concrete', 'hammer-drill', 'blowout']) {
+        expect(concrete.firstWhere((i) => i.id == id).unitPrice, isNull);
+      }
+    });
+  });
 }

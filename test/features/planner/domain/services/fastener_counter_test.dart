@@ -83,4 +83,27 @@ void main() {
       expect(counter.pieceScrews(wide, 0, wall: true), 6);
     });
   });
+
+  group('wall screws by wall type', () {
+    test('stud spacing sets how many studs a piece crosses', () {
+      final wide = planFor(const Inputs(left: 40, right: 40));
+      // 40 in / 16 in = 3 studs, 40 in / 24 in = 2 studs.
+      expect(counter.pieceScrews(wide, 0, wall: true), 6);
+      final far = planFor(const Inputs(left: 40, right: 40, studSpacing: 24));
+      expect(counter.pieceScrews(far, 0, wall: true), 4);
+    });
+
+    test('concrete uses pairs 1.5 in from the ends and every 12 in', () {
+      final p = planFor(const Inputs(concreteWall: true));
+      // 14 in: (14 - 3) / 12 = 1 gap, so 2 pairs = 4 screws.
+      expect(counter.pieceScrews(p, 0, wall: true), 4);
+      expect(counter.wallCleatScrews(p), 16);
+    });
+
+    test('a longer concrete piece gets more pairs', () {
+      final p = planFor(const Inputs(concreteWall: true, left: 40, right: 40));
+      // 40 in: (40 - 3) / 12 = 4 gaps, so 5 pairs = 10 screws.
+      expect(counter.pieceScrews(p, 0, wall: true), 10);
+    });
+  });
 }

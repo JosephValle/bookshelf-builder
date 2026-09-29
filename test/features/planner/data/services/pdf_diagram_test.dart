@@ -2,6 +2,7 @@ import 'package:bookshelf_builder/features/planner/data/services/pdf_diagram.dar
 import 'package:bookshelf_builder/features/planner/domain/models/assembly_diagram.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_arrow.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_dimension.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/diagram_label.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_mark.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_mark_kind.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_piece.dart';
@@ -93,6 +94,32 @@ void main() {
       );
       expect(text, contains('Screw placement'));
       expect(text, contains('Side view of the unit hung'));
+    });
+  });
+
+  group('labels and size', () {
+    test('writes free floating labels and draws a large picture', () async {
+      const d = AssemblyDiagram(
+        caption: 'Front view',
+        width: 76,
+        height: 76,
+        shapes: [],
+        labels: [DiagramLabel(DiagramPoint(10, 10), 'D3')],
+        large: true,
+      );
+      final text = pdfText(await renderWidgets([PdfDiagram.build(d)]));
+      expect(text, contains('D3'));
+      expect(text, contains('Front view'));
+    });
+
+    test('the labelled elevation of a real plan renders', () async {
+      final d = const AssemblyDiagramBuilder().elevation(
+        planFor(),
+        caption: 'Where every piece goes',
+      );
+      final text = pdfText(await renderWidgets([PdfDiagram.build(d)]));
+      expect(text, contains('D1'));
+      expect(text, contains('window'));
     });
   });
 }

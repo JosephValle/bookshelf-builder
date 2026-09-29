@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:bookshelf_builder/app/theme/app_colors.dart';
 import 'package:bookshelf_builder/features/planner/data/services/pdf_diagram.dart';
 import 'package:bookshelf_builder/features/planner/data/services/pdf_material_sections.dart';
+import 'package:bookshelf_builder/features/planner/data/services/pdf_step.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/box.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
@@ -98,6 +99,10 @@ class PdfDocumentBuilder {
           pw.Text('Assembly guide', style: heading),
           pw.SizedBox(height: 6),
           ..._assembly(plan),
+          pw.SizedBox(height: 10),
+          pw.Text('Where every piece goes', style: heading),
+          pw.SizedBox(height: 6),
+          ..._pieceMap(plan),
           pw.SizedBox(height: 16),
           pw.Text('Warnings', style: heading),
           pw.SizedBox(height: 6),
@@ -117,30 +122,17 @@ class PdfDocumentBuilder {
   List<pw.Widget> _assembly(Plan plan) {
     final steps = guide.build(plan);
     return [
-      for (var n = 0; n < steps.length; n++)
-        pw.Padding(
-          padding: const pw.EdgeInsets.only(bottom: 8),
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text(
-                '${n + 1}. ${steps[n].title}',
-                style: const pw.TextStyle(
-                  fontSize: 12,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-              for (final d in steps[n].details) pw.Bullet(text: d),
-              for (final diagram in steps[n].diagrams)
-                pw.Padding(
-                  padding: const pw.EdgeInsets.only(top: 6),
-                  child: PdfDiagram.build(diagram),
-                ),
-            ],
-          ),
-        ),
+      for (var n = 0; n < steps.length; n++) PdfStep.build(n + 1, steps[n]),
     ];
   }
+
+  List<pw.Widget> _pieceMap(Plan plan) => [
+    for (final d in guide.pieceMap(plan))
+      pw.Padding(
+        padding: const pw.EdgeInsets.only(bottom: 10),
+        child: PdfDiagram.build(d),
+      ),
+  ];
 
   pw.Widget _drawing(Plan plan) {
     final scaleW = _drawingMaxW / plan.ringW;

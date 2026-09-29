@@ -1,8 +1,10 @@
 import 'package:bookshelf_builder/features/planner/domain/models/assembly_diagram.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/inputs.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/assembly_diagram_builder.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/assembly_guide_builder.dart';
+import 'package:bookshelf_builder/features/planner/domain/services/cut_layout_builder.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/piece_ids.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -217,6 +219,8 @@ void main() {
       'few shelves': const Inputs(targetClearH: 45),
       'no shelves': const Inputs(targetClearH: 80),
       'shallow': const Inputs(depth: 8),
+      'concrete wall': const Inputs(concreteWall: true),
+      'home': Inputs.home,
     };
 
     for (final e in variants.entries) {
@@ -231,6 +235,7 @@ void main() {
               for (final m in d.marks) m.at,
               for (final a in d.arrows) ...[a.from, a.to],
               for (final x in d.dimensions) ...[x.from, x.to],
+              for (final l in d.labels) l.at,
             ];
             for (final pt in pts) {
               expect(
@@ -253,9 +258,208 @@ void main() {
       });
     }
   });
+
+  group('finished states', () {
+    test('the elevation labels every panel with its id', () {
+      final d = dg.elevation(plan, caption: 'c');
+      expect(d.labels.length, plan.geometry.panels.length);
+      expect(d.large, isTrue);
+      expect(d.width, plan.ringW);
+      expect(d.height, plan.ringH);
+    });
+
+    test('every id in the elevation is a real, distinct piece', () {
+      final p = planFor(const Inputs(left: 30, top: 20, bottom: 20));
+      final d = dg.elevation(p, caption: 'c');
+      final known = {for (final part in p.parts) ...part.ids};
+      final seen = d.labels.map((l) => l.text).toList();
+      expect(seen.toSet().length, seen.length);
+      for (final id in seen) {
+        expect(known, contains(id));
+      }
+    });
+
+    test('the elevation puts shelf ids where the guide puts the shelves', () {
+      final d = dg.elevation(plan, caption: 'c');
+      final texts = d.labels.map((l) => l.text).toSet();
+      for (final id in ids.ids('Left column shelf')) {
+        expect(texts, contains(id));
+      }
+      for (final id in ids.ids('Right column shelf')) {
+        expect(texts, contains(id));
+      }
+    });
+
+    test('the elevation labels the toe kick and the window', () {
+      final d = dg.elevation(plan, caption: 'c');
+      expect(labels(d), containsAll(['window', ids.id('Toe kick')]));
+      final off = dg.elevation(
+        planFor(const Inputs(onFloor: false)),
+        caption: 'c',
+      );
+      expect(labels(off), isNot(contains('F1')));
+    });
+
+    test('a finished column shows every shelf and both panels', () {
+      final d = dg.columnDone(plan, left: true);
+      expect(labels(d).length, plan.leftCol.shelves + 2);
+      expect(d.caption, contains('finished left column'));
+    });
+
+    test('a finished bar shows both skins and its dividers', () {
+      final d = dg.barDone(plan, top: true);
+      expect(
+        labels(d),
+        containsAll([ids.id('Top panel'), ids.id('Head panel')]),
+      );
+      expect(labels(d), contains(ids.id('Top bar divider')));
+      expect(d.shapes.length, 2 + plan.topBar.dividers);
+    });
+  });
+
+  group('elevation label placement', () {
+    for (final e in {
+      'default': const Inputs(),
+      'home layout': Inputs.home,
+      'tall bars': const Inputs(top: 20, bottom: 20),
+      'wide columns': const Inputs(left: 30, right: 30),
+    }.entries) {
+      test('${e.key}: no two labels sit on top of each other', () {
+        final d = dg.elevation(planFor(e.value), caption: 'c');
+        // A label is about 2 in wide and 1.2 in tall at page size.
+        for (var a = 0; a < d.labels.length; a++) {
+          for (var b = a + 1; b < d.labels.length; b++) {
+            final la = d.labels[a];
+            final lb = d.labels[b];
+            final overlap =
+                (la.at.x - lb.at.x).abs() < 2 &&
+                (la.at.y - lb.at.y).abs() < 1.2;
+            expect(
+              overlap,
+              isFalse,
+              reason: '${la.text} and ${lb.text} overlap',
+            );
+          }
+        }
+      });
+    }
+
+    test('a shelf is named at its left end, not over a divider', () {
+      final p = planFor(Inputs.home);
+      final d = dg.elevation(p, caption: 'c');
+      final shelf = p.geometry.panelNames.indexOf('Right column shelf');
+      final box = p.geometry.panels[shelf];
+      final label = d.labels[shelf];
+      expect(label.at.x, closeTo(box.x + 2.4, 1e-9));
+      expect(label.at.y, lessThan(box.y));
+    });
+
+    test('a divider is named at its top end, right of it', () {
+      final p = planFor(Inputs.home);
+      final d = dg.elevation(p, caption: 'c');
+      final k = p.geometry.panelNames.indexOf('Left column divider');
+      final box = p.geometry.panels[k];
+      final label = d.labels[k];
+      expect(label.at.x, greaterThan(box.x + box.w));
+      expect(label.at.y, greaterThan(box.y));
+      expect(label.at.y, lessThan(box.y + 3));
+    });
+  });
+
+  group('concrete wall pictures', () {
+    final concrete = planFor(const Inputs(concreteWall: true));
+
+    test('screws go in pairs 1.5 inches from the ends and 12 apart', () {
+      final d = dg.cleatScrews(concrete, wall: true, piece: 0);
+      expect(d.marks.length, 4);
+      expect(d.dimensions.map((e) => e.text), [
+        '1 1/2"',
+        '1 1/2"',
+        '12" or less',
+        '1"',
+        '1"',
+      ]);
+      expect(d.caption, contains('concrete wall'));
+      expect(d.pieces.last.name, contains('concrete screws'));
+    });
+
+    test('there are no studs in the concrete picture', () {
+      final d = dg.cleatScrews(concrete, wall: true, piece: 0);
+      expect(d.shapes.length, 1);
+    });
+  });
 }
 
 String formatterFor(double v) {
   // Bar positions are shown with the same 1/16 formatting as the guide.
   return const AssemblyGuideBuilder().formatter.format(v);
+
+  group('cutting layout pictures', () {
+    final p = planFor();
+    final sheets = const CutLayoutBuilder().build(
+      parts: p.parts,
+      depthPanel: p.depthPanel,
+    );
+    final first = sheets.first;
+    final d = dg.cutSheet(first, of: 3);
+
+    test('is drawn at page size, to the 96 by 48 inch sheet', () {
+      expect(d.large, isTrue);
+      expect(d.shapes.first.points[2].x, 96);
+      expect(d.shapes.first.points[2].y, 48);
+    });
+
+    test('has the sheet outline and one shape per piece', () {
+      expect(d.shapes.length, first.pieces.length + 1);
+      expect(labels(d), first.pieces.map((e) => e.id).toSet());
+    });
+
+    test('pieces are at their layout position and size', () {
+      final piece = first.pieces.first;
+      final shape = d.shapes[1];
+      expect(shape.points.first.x, piece.x);
+      expect(shape.points.first.y, piece.y);
+      expect(shape.points[2].x, piece.x + piece.length);
+      expect(shape.points[2].y, piece.y + piece.width);
+    });
+
+    test('writes each strip width beside the sheet and the 96 inch length', () {
+      final texts = d.dimensions.map((e) => e.text).toList();
+      expect(texts.where((t) => t == '11 1/16"').length, 4);
+      expect(texts, contains('96"'));
+    });
+
+    test('writes the length on pieces big enough to hold it', () {
+      final inside = d.dimensions.where((e) => e.from.x < 96 && e.text != '96"');
+      expect(inside, isNotEmpty);
+      for (final m in inside) {
+        expect(m.light, isTrue, reason: 'panels are dark');
+      }
+    });
+
+    test('a tiny piece gets no length of its own', () {
+      final narrow = sheets
+          .expand((s) => s.pieces)
+          .where((e) => e.width < 5)
+          .length;
+      expect(narrow, greaterThan(0));
+      final all = sheets.map((s) => dg.cutSheet(s, of: 3));
+      final lengths = all.expand((x) => x.dimensions).length;
+      final pieces = sheets.expand((s) => s.pieces).length;
+      expect(lengths, lessThan(pieces + sheets.length * 6));
+    });
+
+    test('back sheets use the lighter back tone and dark measurements', () {
+      final back = sheets.last;
+      expect(back.material, PartMaterial.ply14);
+      final bd = dg.cutSheet(back, of: 1);
+      expect(bd.caption, contains('1/4" sheet 1 of 1'));
+      expect(
+        bd.dimensions.where((e) => e.from.x < 96 && e.text != '96"').every(
+          (e) => !e.light,
+        ),
+        isTrue,
+      );
+    });
+  });
 }

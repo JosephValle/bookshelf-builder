@@ -110,4 +110,27 @@ void main() {
       }
     });
   });
+
+  group('concrete wall', () {
+    test('a stud wall recommends a stud finder, not a hammer drill', () {
+      final names = tools().map((e) => e.name);
+      expect(names, contains('Stud finder'));
+      expect(names.any((n) => n.contains('Hammer drill')), isFalse);
+    });
+
+    test('a concrete wall swaps the stud finder for masonry tools', () {
+      final list = tools(const Inputs(concreteWall: true));
+      final names = list.map((e) => e.name);
+      expect(names, isNot(contains('Stud finder')));
+      expect(names.any((n) => n.contains('Hammer drill')), isTrue);
+      expect(names.any((n) => n.contains('Blow-out')), isTrue);
+      expect(names.any((n) => n.contains('Concrete screws')), isTrue);
+    });
+
+    test('the stud finder uses the chosen stud spacing', () {
+      final stud = tools(const Inputs(studSpacing: 18))
+          .firstWhere((e) => e.name == 'Stud finder');
+      expect(stud.reason, contains('18"'));
+    });
+  });
 }

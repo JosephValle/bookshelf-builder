@@ -21,4 +21,22 @@ class PlannerNotes {
       'through the solid plywood anchor cleat inside the bar over the window '
       '(glued to the bar skins and webs), never through the 1/4" back panel '
       'alone.';
+
+  /// How to attach the finished unit to a concrete or masonry wall.
+  static const String wallConcrete =
+      'Attach with a 3/4" plywood French cleat: one half fastened to the wall '
+      'with 3/16" concrete screws (drilled with a hammer drill and a masonry '
+      'bit into solid concrete or the face of a block, not into a mortar '
+      'joint) and the matching half fastened to the back of the unit, one '
+      'row at the top and one at mid-height on each column. Anchor the unit '
+      'against tipping with concrete screws through the solid plywood anchor '
+      'cleat inside the bar over the window, never through the 1/4" back '
+      'panel alone. Follow the screw maker\'s instructions for hole size, '
+      'depth and load, and use sleeve or hollow-wall anchors in hollow '
+      'block.';
+
+  /// The wall attachment note for a stud wall or, when [concrete] is true, a
+  /// concrete or masonry wall.
+  static String wallFor({required bool concrete}) =>
+      concrete ? wallConcrete : wall;
 }

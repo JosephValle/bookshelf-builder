@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:bookshelf_builder/features/planner/domain/models/assembly_diagram.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/cut_sheet.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_arrow.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_dimension.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/diagram_label.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_mark.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_mark_kind.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_piece.dart';
@@ -10,7 +12,9 @@ import 'package:bookshelf_builder/features/planner/domain/models/diagram_point.d
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_shape.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_tone.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/fasteners.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/layout_piece.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/limits.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/fastener_counter.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/inches_formatter.dart';
@@ -65,6 +69,11 @@ class AssemblyDiagramBuilder {
   /// Entries for the pieces strip: one per piece id.
   List<DiagramPiece> _use(List<(String id, String name)> pieces) => [
     for (final (id, name) in pieces) DiagramPiece(id, 1, name),
+  ];
+
+  /// Centers of [n] items spread evenly between [from] and [to].
+  List<double> _spread(int n, double from, double to) => [
+    for (var k = 0; k < n; k++) from + (to - from) * (k + 1) / (n + 1),
   ];
 
   int _perJoint(Plan plan) => Fasteners.screwsPerJoint(plan.depthPanel);
@@ -1014,7 +1023,15 @@ class AssemblyDiagramBuilder {
           tone: DiagramTone.ghost,
         ),
       ],
-      pieces: _use([(id, 'back panel')]),
+      pieces: [
+        ..._use([(id, 'back panel')]),
+        DiagramPiece(
+          '',
+          counter.backPanelBrads(plan, current),
+          '1" brad nails',
+        ),
+        const DiagramPiece('', 0, 'wood glue'),
+      ],
     );
   }
 
@@ -1144,6 +1161,82 @@ class AssemblyDiagramBuilder {
         ],
       );
     }
+    if (plan.inputs.concreteWall) {
+      final s = 230 / len;
+      final gaps = math.max(
+        1,
+        ((len - 2 * Fasteners.concreteEndInset) / Fasteners.concreteSpacing)
+            .ceil(),
+      );
+      final first = 10 + s * Fasteners.concreteEndInset;
+      final last = 240 - s * Fasteners.concreteEndInset;
+      final xs = [
+        for (var k = 0; k <= gaps; k++) first + (last - first) * k / gaps,
+      ];
+      const rowY = 44 / Limits.anchorCleatW;
+      return AssemblyDiagram(
+        caption:
+            'Screw placement. The face of wall cleat piece $id, ${_f(len)} '
+            'long, on a concrete wall. Drive a pair of concrete screws '
+            '${_f(Fasteners.concreteEndInset)} from each end, and another '
+            'pair at least every ${_f(Fasteners.concreteSpacing)} between. In '
+            'each pair, one screw is ${_f(Fasteners.wallScrewEdgeInset)} '
+            'below the top edge and one ${_f(Fasteners.wallScrewEdgeInset)} '
+            'above the bottom edge.',
+        width: 262,
+        height: 114,
+        shapes: [
+          DiagramShape.rect(
+            10,
+            24,
+            230,
+            44,
+            label: id,
+            tone: DiagramTone.cleat,
+          ),
+        ],
+        marks: [
+          for (final x in xs) ...[
+            _screw(x, 24 + rowY * Fasteners.wallScrewEdgeInset),
+            _screw(x, 68 - rowY * Fasteners.wallScrewEdgeInset),
+          ],
+        ],
+        dimensions: [
+          _dim(10, 84, first, 84, _f(Fasteners.concreteEndInset)),
+          _dim(last, 84, 240, 84, _f(Fasteners.concreteEndInset)),
+          if (xs.length > 1)
+            _dim(
+              xs[0],
+              98,
+              xs[1],
+              98,
+              '${_f(Fasteners.concreteSpacing)} or less',
+            ),
+          _dim(
+            250,
+            24,
+            250,
+            24 + rowY * Fasteners.wallScrewEdgeInset,
+            _f(Fasteners.wallScrewEdgeInset),
+          ),
+          _dim(
+            250,
+            68 - rowY * Fasteners.wallScrewEdgeInset,
+            250,
+            68,
+            _f(Fasteners.wallScrewEdgeInset),
+          ),
+        ],
+        pieces: [
+          ..._use([(id, 'wall cleat piece')]),
+          DiagramPiece(
+            '',
+            counter.pieceScrews(plan, piece, wall: true),
+            '3/16" x 2-1/4" concrete screws',
+          ),
+        ],
+      );
+    }
     const sy = 44 / Limits.anchorCleatW;
     const studs = [70.0, 178.0];
     return AssemblyDiagram(
@@ -1152,7 +1245,7 @@ class AssemblyDiagramBuilder {
           'long, over two studs. Drive two screws into every stud it '
           'crosses: one ${_f(Fasteners.wallScrewEdgeInset)} below the top edge '
           'and one ${_f(Fasteners.wallScrewEdgeInset)} above the bottom edge. '
-          'Studs are usually ${_f(Limits.studSpacing)} apart.',
+          'Studs are usually ${_f(plan.inputs.studSpacing)} apart.',
       width: 262,
       height: 114,
       shapes: [
@@ -1181,11 +1274,264 @@ class AssemblyDiagramBuilder {
           68,
           _f(Fasteners.wallScrewEdgeInset),
         ),
-        _dim(studs[0], 100, studs[1], 100, _f(Limits.studSpacing)),
+        _dim(studs[0], 100, studs[1], 100, _f(plan.inputs.studSpacing)),
       ],
       pieces: [
         ..._use([(id, 'wall cleat piece')]),
-        ..._hw(counter.pieceScrews(plan, piece, wall: true), '3" screws'),
+        DiagramPiece(
+          '',
+          counter.pieceScrews(plan, piece, wall: true),
+          '3" screws',
+        ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  // Cutting layout
+
+  /// One plywood sheet drawn to scale with every piece in place.
+  ///
+  /// The sheet is 96 in long and 48 in wide. Each strip's width is written at
+  /// its right end; the piece sizes are in the list that goes with the
+  /// picture, because short pieces are too small to hold a measurement.
+  AssemblyDiagram cutSheet(CutSheet sheet, {required int of}) {
+    final is34 = sheet.material == PartMaterial.ply34;
+    DiagramTone tone(LayoutPiece p) {
+      if (!is34) return DiagramTone.back;
+      return PartsBuilder.isNarrowStrip(p.name)
+          ? DiagramTone.cleat
+          : DiagramTone.panel;
+    }
+
+    final tops = sheet.stripTops;
+    return AssemblyDiagram(
+      caption:
+          '${is34 ? '3/4"' : '1/4"'} sheet ${sheet.number} of $of, drawn to '
+          'scale (${_f(Limits.sheetL)} long by ${_f(Limits.sheetW)} wide). '
+          'The pale area is waste. The thin gaps between pieces are the saw '
+          'kerf. Rip along the long direction first, then crosscut each '
+          'strip. Sizes are in the list below the picture.',
+      width: Limits.sheetL + 22,
+      height: Limits.sheetW + 8,
+      large: true,
+      shapes: [
+        DiagramShape.rect(
+          0,
+          0,
+          Limits.sheetL,
+          Limits.sheetW,
+          tone: DiagramTone.ghost,
+        ),
+        for (final p in sheet.pieces)
+          DiagramShape.rect(
+            p.x,
+            p.y,
+            p.length,
+            p.width,
+            label: p.id,
+            tone: tone(p),
+          ),
+      ],
+      dimensions: [
+        for (final t in tops)
+          _dim(
+            Limits.sheetL + 3,
+            t,
+            Limits.sheetL + 3,
+            t + sheet.stripWidth(t),
+            _f(sheet.stripWidth(t)),
+          ),
+        _dim(
+          0,
+          Limits.sheetW + 4,
+          Limits.sheetL,
+          Limits.sheetW + 4,
+          _f(Limits.sheetL),
+        ),
+        // The length of every piece big enough to hold it. The rest are in the
+        // list under the picture.
+        for (final p in sheet.pieces)
+          if (p.length >= 9 && p.width >= 6)
+            DiagramDimension(
+              _p(p.x + 0.8, p.y + p.width - 1.6),
+              _p(p.x + p.length - 0.8, p.y + p.width - 1.6),
+              _f(p.length),
+              light: tone(p) == DiagramTone.panel,
+            ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  // Finished states: checkpoints and the piece map
+
+  /// The front of the unit drawn to scale with the id of every panel written
+  /// beside it.
+  ///
+  /// Shelves are labelled just above their line at their left end, dividers at
+  /// their top end just to the right, column panels just inside their column,
+  /// and the four long panels inside the bars.
+  AssemblyDiagram elevation(Plan plan, {required String caption}) {
+    final ids = PieceIds(plan);
+    final g = plan.geometry;
+    final i = plan.inputs;
+    const t = Limits.t;
+    final counts = <String, int>{};
+    final shapes = <DiagramShape>[
+      DiagramShape.rect(
+        g.windowBox.x,
+        g.windowBox.y,
+        g.windowBox.w,
+        g.windowBox.h,
+        label: 'window',
+        tone: DiagramTone.ghost,
+      ),
+    ];
+    final labels = <DiagramLabel>[];
+    final bottomY = plan.ringH - plan.dimensions.kick;
+
+    // The top of the gap between two shelves that is closest to the middle of
+    // a column. The column panel ids are written at the top of that gap, and
+    // the shelf ids at the bottom of it, so the two never stack.
+    double midGap(String shelfName) {
+      final ys = <double>[
+        t,
+        for (var k = 0; k < g.panels.length; k++)
+          if (g.panelNames[k] == shelfName) g.panels[k].y,
+        bottomY - t,
+      ]..sort();
+      var best = ys.first;
+      var bestDist = double.infinity;
+      for (var k = 0; k + 1 < ys.length; k++) {
+        final d = ((ys[k] + ys[k + 1]) / 2 - plan.ringH / 2).abs();
+        if (d < bestDist) {
+          best = ys[k];
+          bestDist = d;
+        }
+      }
+      return best + 1.6;
+    }
+
+    final leftMid = midGap('Left column shelf');
+    final rightMid = midGap('Right column shelf');
+    const side = 2.6;
+    for (var k = 0; k < g.panels.length; k++) {
+      final name = g.panelNames[k];
+      final b = g.panels[k];
+      final n = counts[name] = (counts[name] ?? -1) + 1;
+      final id = ids.id(name, n);
+      shapes.add(DiagramShape.rect(b.x, b.y, b.w, b.h));
+      final cx = b.x + b.w / 2;
+      final DiagramPoint at;
+      switch (name) {
+        case 'Top panel':
+          at = _p(i.left + 3, t + 1.3);
+        case 'Bottom panel':
+          at = _p(i.left + 3, b.y - 1.3);
+        case 'Head panel' || 'Sill panel':
+          at = _p(i.left + 3, b.y - 1.3);
+        case 'Outer column panel':
+          at = n == 0 ? _p(cx + side, leftMid) : _p(cx - side, rightMid);
+        case 'Inner column panel':
+          at = n == 0 ? _p(cx - side, leftMid) : _p(cx + side, rightMid);
+        case 'Left column shelf' ||
+            'Right column shelf' ||
+            'Top bar shelf' ||
+            'Bottom bar shelf':
+          // At the left end of the shelf, not its middle: a long shelf has
+          // dividers under it, and the middle is where one usually stands.
+          at = _p(b.x + 2.4, b.y - 1.2);
+        default:
+          // A divider is named at its top end, just right of it. The shelf ids
+          // are at the bottom of the opening, so the two never meet, and a
+          // tier line halfway up a bar divider stays clear.
+          at = _p(cx + side, b.y + 1.6);
+      }
+      labels.add(DiagramLabel(at, id));
+    }
+    final kick = g.toeKickBox;
+    if (kick != null) {
+      shapes.add(
+        DiagramShape.rect(
+          kick.x,
+          kick.y,
+          kick.w,
+          kick.h,
+          label: ids.id(PartsBuilder.toeKickName),
+          tone: DiagramTone.cleat,
+        ),
+      );
+    }
+    return AssemblyDiagram(
+      caption: caption,
+      width: plan.ringW,
+      height: plan.ringH,
+      shapes: shapes,
+      labels: labels,
+      large: true,
+    );
+  }
+
+  /// A finished column with every shelf and both panels labelled.
+  AssemblyDiagram columnDone(Plan plan, {required bool left}) {
+    final ids = PieceIds(plan);
+    final c = left ? plan.leftCol : plan.rightCol;
+    final shelfName = left ? 'Left column shelf' : 'Right column shelf';
+    final outer = ids.id('Outer column panel', left ? 0 : 1);
+    final inner = ids.id('Inner column panel', left ? 0 : 1);
+    return AssemblyDiagram(
+      caption:
+          'Front view of the finished ${left ? 'left' : 'right'} column. '
+          '$outer and $inner are the two tall panels, with '
+          '${c.shelves} ${c.shelves == 1 ? 'shelf' : 'shelves'} between them '
+          'at the heights you marked. Not to scale.',
+      width: 150,
+      height: 152,
+      shapes: [
+        DiagramShape.rect(20, 6, 14, 138, label: outer),
+        for (var k = 0; k < c.shelves; k++)
+          DiagramShape.rect(
+            34,
+            _under(shelfPos(plan, left: left, k: k + 1), plan.sideH) - 5,
+            76,
+            5,
+            label: ids.id(shelfName, k),
+            tone: DiagramTone.ghost,
+          ),
+        DiagramShape.rect(110, 6, 14, 138, label: inner),
+      ],
+    );
+  }
+
+  /// A finished bar with its skins and dividers labelled.
+  AssemblyDiagram barDone(Plan plan, {required bool top}) {
+    final ids = PieceIds(plan);
+    final b = top ? plan.topBar : plan.bottomBar;
+    final long = ids.id(_longName(top));
+    final short = ids.id(_shortName(top));
+    final shown = math.min(b.dividers, 4);
+    final xs = _spread(shown, 30, 210);
+    return AssemblyDiagram(
+      caption:
+          'Front view of the finished ${top ? 'top' : 'bottom'} bar unit. '
+          'The long panel ($long) is the outer skin and sticks out at both '
+          'ends, the short panel ($short) is the inner skin, and the '
+          'dividers stand between them. Not to scale.',
+      width: 240,
+      height: 100,
+      shapes: [
+        DiagramShape.rect(0, top ? 4 : 84, 240, 12, label: long),
+        DiagramShape.rect(30, top ? 84 : 4, 180, 12, label: short),
+        for (var k = 0; k < shown; k++)
+          DiagramShape.rect(
+            xs[k] - 6,
+            16,
+            12,
+            68,
+            label: ids.id(_divName(top), k),
+            tone: DiagramTone.cleat,
+          ),
       ],
     );
   }

@@ -7,7 +7,8 @@ import 'package:flutter/material.dart';
 /// A labeled length input: a text field that accepts decimals or fractions
 /// (`11.25`, `11 1/4`), optionally paired with a slider.
 ///
-/// With [optional] set, an empty field reports null.
+/// Give [onCleared] to make the field optional: an empty field then calls it
+/// instead of reporting a value.
 class DimField extends StatefulWidget {
   /// Creates a field.
   const DimField({
@@ -17,7 +18,7 @@ class DimField extends StatefulWidget {
     this.min = 0,
     this.max = 1,
     this.slider = true,
-    this.optional = false,
+    this.onCleared,
     this.enabled = true,
     this.allowZero = false,
     super.key,
@@ -29,8 +30,11 @@ class DimField extends StatefulWidget {
   /// Current value in inches (null only for optional fields).
   final double? value;
 
-  /// Called with each valid new value (null when an optional field is cleared).
-  final ValueChanged<double?> onChanged;
+  /// Called with each valid new value.
+  final ValueChanged<double> onChanged;
+
+  /// Called when an optional field is emptied. Null for a required field.
+  final VoidCallback? onCleared;
 
   /// Slider minimum.
   final double min;
@@ -40,9 +44,6 @@ class DimField extends StatefulWidget {
 
   /// Whether to show the slider.
   final bool slider;
-
-  /// Whether the field may be left empty.
-  final bool optional;
 
   /// Whether the field and slider can be edited.
   final bool enabled;
@@ -88,8 +89,9 @@ class _DimFieldState extends State<DimField> {
   }
 
   void _typed(String text) {
-    if (widget.optional && text.trim().isEmpty) {
-      widget.onChanged(null);
+    final cleared = widget.onCleared;
+    if (cleared != null && text.trim().isEmpty) {
+      cleared();
       return;
     }
     final v = _parser.parse(text);

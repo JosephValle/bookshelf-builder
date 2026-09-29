@@ -44,7 +44,7 @@ class PdfMaterialSections {
     cost(plan),
     toolChecklist(plan),
     buying(),
-    wallAttachment(),
+    wallAttachment(plan),
   ];
 
   /// Sheet counts and edge band length.
@@ -193,8 +193,13 @@ class PdfMaterialSections {
   );
 
   /// How to attach the unit to the wall.
-  pw.Widget wallAttachment() => PdfCard.build(
+  pw.Widget wallAttachment(Plan plan) => PdfCard.build(
     title: 'Wall attachment',
-    children: [pw.Text(PlannerNotes.wall, style: PdfStyles.body)],
+    children: [
+      pw.Text(
+        PlannerNotes.wallFor(concrete: plan.inputs.concreteWall),
+        style: PdfStyles.body,
+      ),
+    ],
   );
 }

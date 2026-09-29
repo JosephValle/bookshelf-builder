@@ -35,21 +35,18 @@ void main() {
     });
 
     test('copyWith sets and clears optional wall fields', () {
-      final set = const Inputs().copyWith(wallW: () => 120, wallH: () => 96);
+      final set = const Inputs().copyWith(wallW: 120, wallH: 96);
       expect(set.wallW, 120);
       expect(set.wallH, 96);
-      final cleared = set.copyWith(wallW: () => null);
+      final cleared = set.copyWith(wallW: null);
       expect(cleared.wallW, isNull);
       expect(cleared.wallH, 96);
     });
 
     test('copyWith sets and clears the window position', () {
-      final set = const Inputs().copyWith(windowFromWallLeft: () => 10);
+      final set = const Inputs().copyWith(windowFromWallLeft: 10);
       expect(set.windowFromWallLeft, 10);
-      expect(
-        set.copyWith(windowFromWallLeft: () => null).windowFromWallLeft,
-        isNull,
-      );
+      expect(set.copyWith(windowFromWallLeft: null).windowFromWallLeft, isNull);
     });
 
     test('copyWith changes the shelf width and fill wall flag', () {
@@ -203,13 +200,15 @@ void main() {
         'edgeStiffener': base.copyWith(edgeStiffener: true),
         'maxShelfWidth': base.copyWith(maxShelfWidth: 18),
         'fillWall': base.copyWith(fillWall: false),
-        'wallW': base.copyWith(wallW: () => 100),
-        'wallH': base.copyWith(wallH: () => 96),
+        'concreteWall': base.copyWith(concreteWall: true),
+        'studSpacing': base.copyWith(studSpacing: 24),
+        'wallW': base.copyWith(wallW: 100),
+        'wallH': base.copyWith(wallH: 96),
         'wallMarginTop': base.copyWith(wallMarginTop: 1),
         'wallMarginLeft': base.copyWith(wallMarginLeft: 1),
         'wallMarginRight': base.copyWith(wallMarginRight: 1),
-        'windowFromWallLeft': base.copyWith(windowFromWallLeft: () => 5),
-        'windowFromFloor': base.copyWith(windowFromFloor: () => 5),
+        'windowFromWallLeft': base.copyWith(windowFromWallLeft: 5),
+        'windowFromFloor': base.copyWith(windowFromFloor: 5),
         'trimTop': base.copyWith(trimTop: 1),
         'trimBottom': base.copyWith(trimBottom: 1),
         'trimLeft': base.copyWith(trimLeft: 1),
@@ -222,7 +221,7 @@ void main() {
       for (final e in changed.entries) {
         expect(e.value, isNot(base), reason: '${e.key} is missing from props');
       }
-      expect(changed.length, base.props.length);
+      expect(changed.length, base.toJson().length);
     });
 
     test('has value equality', () {

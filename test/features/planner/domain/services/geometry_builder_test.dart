@@ -46,4 +46,58 @@ void main() {
       expect(two, greaterThan(one));
     });
   });
+
+  group('panel names', () {
+    test('every panel has a name', () {
+      final g = planFor().geometry;
+      expect(g.panelNames.length, g.panels.length);
+    });
+
+    test('the four long panels come first, then the column panels', () {
+      final names = planFor().geometry.panelNames;
+      expect(names.take(4), [
+        'Top panel',
+        'Bottom panel',
+        'Head panel',
+        'Sill panel',
+      ]);
+      expect(names.skip(4).take(4), [
+        'Outer column panel',
+        'Inner column panel',
+        'Inner column panel',
+        'Outer column panel',
+      ]);
+    });
+
+    test('shelves and dividers are named for their column or bar', () {
+      final p = planFor(const Inputs(left: 40, top: 20));
+      final names = p.geometry.panelNames;
+      expect(
+        names.where((n) => n == 'Left column shelf').length,
+        p.leftCol.shelves,
+      );
+      expect(
+        names.where((n) => n == 'Right column shelf').length,
+        p.rightCol.shelves,
+      );
+      expect(
+        names.where((n) => n == 'Top bar divider').length,
+        p.topBar.dividers,
+      );
+      expect(names.where((n) => n == 'Top bar shelf').isNotEmpty, isTrue);
+    });
+
+    test('every name is a part in the cut list with a matching count', () {
+      // Kept under one sheet length so no part is spliced into two pieces.
+      final p = planFor(const Inputs(left: 30, top: 20, bottom: 20));
+      final counts = <String, int>{};
+      for (final n in p.geometry.panelNames) {
+        counts[n] = (counts[n] ?? 0) + 1;
+      }
+      for (final e in counts.entries) {
+        final part = p.parts.firstWhere((x) => x.name == e.key);
+        expect(part.qty, e.value, reason: e.key);
+      }
+    });
+  });
 }

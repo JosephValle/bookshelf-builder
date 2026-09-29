@@ -1,17 +1,17 @@
 import 'package:bookshelf_builder/features/planner/domain/models/box.dart';
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'bay.freezed.dart';
 
 /// A clear opening between panels where books sit.
-class Bay extends Equatable {
+@freezed
+abstract class Bay with _$Bay {
   /// Creates a bay.
-  const Bay(this.box, this.bad);
+  const factory Bay(
+    /// Clear opening rectangle.
+    Box box,
 
-  /// Clear opening rectangle.
-  final Box box;
-
-  /// True when the bay violates a size or span limit.
-  final bool bad;
-
-  @override
-  List<Object?> get props => [box, bad];
+    /// True when the bay violates a size or span limit.
+    bool bad,
+  ) = _Bay;
 }

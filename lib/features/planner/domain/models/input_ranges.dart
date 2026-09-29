@@ -42,6 +42,10 @@ class InputRanges {
   static const double marginMin = 0;
   static const double marginMax = 24;
 
+  /// Stud spacing range (12, 16 and 24 inches on center are common).
+  static const double studSpacingMin = 12;
+  static const double studSpacingMax = 24;
+
   /// Depth presets: 1x8, 1x10 and 1x12 boards plus the back panel.
   static const List<double> depthPresets = [7.25, 9.25, 11.25];
 

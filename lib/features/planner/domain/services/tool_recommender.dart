@@ -1,4 +1,3 @@
-import 'package:bookshelf_builder/features/planner/domain/models/limits.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/tool_recommendation.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/inches_formatter.dart';
@@ -67,18 +66,38 @@ class ToolRecommender {
         name: '4 ft level',
         reason: 'Sets the unit plumb and level when you mount it.',
       ),
-      ToolRecommendation(
-        name: 'Stud finder',
-        reason:
-            'Locates studs every ${f(Limits.studSpacing)} for the French '
-            'cleat and the anti-tip anchors.',
-      ),
-      const ToolRecommendation(
-        name: 'Structural screws (about 3") and anti-tip straps',
-        reason:
-            'Anchors the unit to the wall through the solid anchor cleat, not '
-            'the 1/4" back alone.',
-      ),
+      if (i.concreteWall) ...[
+        const ToolRecommendation(
+          name: 'Hammer drill with masonry bits',
+          reason:
+              'Drills the holes in concrete or block for the French cleat '
+              'and the anti-tip anchors. A 5/32" carbide bit suits 3/16" '
+              'concrete screws.',
+        ),
+        const ToolRecommendation(
+          name: 'Blow-out bulb or a vacuum',
+          reason: 'Clears the dust from each hole so the screw grips.',
+        ),
+        const ToolRecommendation(
+          name: 'Concrete screws (3/16" x 2-1/4") and anti-tip straps',
+          reason:
+              'Fasten the wall half of the cleat, and anchor the unit through '
+              'the solid anchor cleat, not the 1/4" back alone.',
+        ),
+      ] else ...[
+        ToolRecommendation(
+          name: 'Stud finder',
+          reason:
+              'Locates studs every ${f(i.studSpacing)} for the French '
+              'cleat and the anti-tip anchors.',
+        ),
+        const ToolRecommendation(
+          name: 'Structural screws (about 3") and anti-tip straps',
+          reason:
+              'Anchors the unit to the wall through the solid anchor cleat, '
+              'not the 1/4" back alone.',
+        ),
+      ],
       if (tall)
         ToolRecommendation(
           name: 'A helper and a sturdy step stool',

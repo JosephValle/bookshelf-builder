@@ -1,18 +1,18 @@
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_mark_kind.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_point.dart';
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'diagram_mark.freezed.dart';
 
 /// A fastener drawn on an assembly diagram.
-class DiagramMark extends Equatable {
-  /// Creates a mark at [at].
-  const DiagramMark(this.at, {this.kind = DiagramMarkKind.screw});
+@freezed
+abstract class DiagramMark with _$DiagramMark {
+  /// Creates a mark at a point.
+  const factory DiagramMark(
+    /// Where the fastener goes.
+    DiagramPoint at, {
 
-  /// Where the fastener goes.
-  final DiagramPoint at;
-
-  /// Screw or nail.
-  final DiagramMarkKind kind;
-
-  @override
-  List<Object?> get props => [at, kind];
+    /// Screw or nail.
+    @Default(DiagramMarkKind.screw) DiagramMarkKind kind,
+  }) = _DiagramMark;
 }

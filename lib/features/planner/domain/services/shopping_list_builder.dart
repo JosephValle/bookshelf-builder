@@ -48,7 +48,10 @@ class ShoppingListBuilder {
       ),
       item('screws-1-1-4', '1-1/4" screws', m, 1, 'box'),
       item('brads-1', '1" brad nails, 18 gauge', m, 1, 'box'),
-      item('screws-structural', 'Structural screws, about 3"', m, 1, 'box'),
+      if (plan.inputs.concreteWall)
+        item('screws-concrete', 'Concrete screws, 3/16" x 2-1/4"', m, 1, 'box')
+      else
+        item('screws-structural', 'Structural screws, about 3"', m, 1, 'box'),
       item('anti-tip', 'Anti-tip straps', m, 1, 'pack'),
       if (plan.inputs.onFloor) item('shims', 'Shims', m, 1, 'pack'),
       item('sandpaper', 'Sandpaper, 150 grit', m, 1, 'pack'),
@@ -67,7 +70,11 @@ class ShoppingListBuilder {
         'set',
       ),
       item('level', '4 ft level', t, 1, 'tool'),
-      item('stud-finder', 'Stud finder', t, 1, 'tool'),
+      if (plan.inputs.concreteWall) ...[
+        item('hammer-drill', 'Hammer drill with masonry bits', t, 1, 'tool'),
+        item('blowout', 'Blow-out bulb or vacuum', t, 1, 'tool'),
+      ] else
+        item('stud-finder', 'Stud finder', t, 1, 'tool'),
       item('pocket-jig', 'Pocket hole jig', t, 1, 'tool', essential: false),
       item('sander', 'Random orbit sander', t, 1, 'tool', essential: false),
       item('roundover', 'Roundover router bit', t, 1, 'bit', essential: false),

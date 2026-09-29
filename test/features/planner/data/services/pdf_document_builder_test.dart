@@ -93,4 +93,39 @@ void main() {
       expect(text, contains('rules of thumb'));
     });
   });
+
+  group('guide layout', () {
+    test('has tools, hardware, checkpoints and the piece map', () async {
+      const plain = PdfDocumentBuilder(compress: false);
+      final text = pdfText(await plain.build(planFor()));
+      expect(text, contains('Tools'));
+      expect(text, contains('Hardware'));
+      expect(text, contains('Checkpoint: the left column'));
+      expect(text, contains('Where every piece goes'));
+      expect(text, contains('pieces with the same letter are identical'));
+    });
+
+    test(
+      'the piece map comes after the guide and before the warnings',
+      () async {
+        const plain = PdfDocumentBuilder(compress: false);
+        final text = pdfText(await plain.build(planFor()));
+        final guide = text.indexOf('Finish and check');
+        final map = text.indexOf('Where every piece goes');
+        final warnings = text.indexOf('Warnings');
+        expect(guide, lessThan(map));
+        expect(map, lessThan(warnings));
+      },
+    );
+
+    test('a concrete wall changes the wall note and the wall steps', () async {
+      const plain = PdfDocumentBuilder(compress: false);
+      final text = pdfText(
+        await plain.build(planFor(const Inputs(concreteWall: true))),
+      );
+      expect(text, contains('Mount: check the wall'));
+      expect(text, contains('concrete screws'));
+      expect(text, contains('mortar'));
+    });
+  });
 }

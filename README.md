@@ -52,6 +52,10 @@ Lengths accept decimals or fractions (`11.25` or `11 1/4`) and are shown to the 
 - **Structure over the window.** The bar above the window is a glued box beam with a solid anchor cleat inside it, so wall anchors bite solid plywood.
 - **Hangs on a French cleat.** The cut list, materials and cost include both halves of a 3/4" plywood French cleat (wall side and unit side), and the assembly guide walks through cutting, bevelling and hanging them.
 - **Flat pack style instructions.** Every piece has an id (`A1`, `B3`); identical pieces share a letter. The guide has one small step and one 2D picture per join, such as "attach shelf D3 to B1", with the screw count, the distance of each screw from the edges, and the pieces and hardware each step uses.
+- **Tools and hardware in every step.** Each step lists the tools it uses and what each is for (the drill and its bit, the saw tilted to 45 degrees, the brad nailer), and the screws, nails and glue it needs with counts.
+- **Tick boxes and checkpoints.** Every step has a tick box, and after each stage a checkpoint shows what the build should look like and lists what to check.
+- **Concrete or stud wall.** Switch the wall type and the cleat steps, tools, shopping list and screw counts change. Stud spacing is an input.
+- **Piece map.** The last page repeats the main drawing with the id of every piece written on it.
 - **Written for beginners.** The guide explains the terms and safety basics, gives shelf mark heights and divider positions, and lists a check after each stage.
 - **Fits your wall.** Give it a wall size and margins and the unit stretches to fill the space, with the window where you want it.
 - **Recommended tools.** The list adapts to your plan: cutting tools scale with the number of sheets, and edge band, floor leveling, wall work and very tall units add their own items.
@@ -88,6 +92,20 @@ flutter run -d chrome --web-browser-flag="--disable-gpu"
 
 Software rendering is a little slower but is enough for this app.
 
+## Generated code
+
+The value models in `lib/features/planner/domain/models/` are written with [freezed](https://pub.dev/packages/freezed), which generates `copyWith`, `==`, `hashCode` and `toString`. `Inputs` also uses [json_serializable](https://pub.dev/packages/json_serializable) for its saved JSON. The generated `*.freezed.dart` and `*.g.dart` files are committed, so a fresh clone runs without any extra step.
+
+After you add or change a field on a model, regenerate them:
+
+```
+dart run build_runner build
+```
+
+While you are editing models, `dart run build_runner watch` regenerates on every save. Never edit a generated file by hand: change the model and run the generator again.
+
+To add a field to `Inputs`, add it to the factory constructor with an `@Default(...)` (or make it nullable), run the generator, and add it to `InputsCodec` only if it needs an unusual validation rule. The saved JSON and equality follow from the constructor automatically.
+
 ## Test it
 
 ```
@@ -97,6 +115,7 @@ flutter test
 Before committing, the project keeps a clean run of:
 
 ```
+dart run build_runner build
 dart fix --apply
 dart format .
 flutter analyze
@@ -111,7 +130,7 @@ The code follows a feature-first layout with three layers:
 lib/
   app/                     app widget and design tokens (colors, spacing, sizes)
   features/planner/
-    domain/                pure Dart: models and services (no Flutter widgets)
+    domain/                pure Dart: models (freezed) and services (no Flutter widgets)
     data/                  clipboard, PDF and saved-state implementations
     presentation/          cubits, screens and widgets
 test/                      mirrors lib/ one to one

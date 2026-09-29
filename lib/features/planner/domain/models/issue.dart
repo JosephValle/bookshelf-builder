@@ -1,17 +1,17 @@
 import 'package:bookshelf_builder/features/planner/domain/models/severity.dart';
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'issue.freezed.dart';
 
 /// A single warning, error or note produced while planning.
-class Issue extends Equatable {
+@freezed
+abstract class Issue with _$Issue {
   /// Creates an issue.
-  const Issue(this.severity, this.message);
+  const factory Issue(
+    /// How serious the issue is.
+    Severity severity,
 
-  /// How serious the issue is.
-  final Severity severity;
-
-  /// Human readable description.
-  final String message;
-
-  @override
-  List<Object?> get props => [severity, message];
+    /// Human readable description.
+    String message,
+  ) = _Issue;
 }

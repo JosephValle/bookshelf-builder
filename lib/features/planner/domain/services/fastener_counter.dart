@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:bookshelf_builder/features/planner/domain/models/bar_plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/column_plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/fasteners.dart';
-import 'package:bookshelf_builder/features/planner/domain/models/limits.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
 
 /// Counts the screws and brads a plan needs, so the guide can tell you how
@@ -37,23 +36,34 @@ class FastenerCounter {
   int toeKickScrews(Plan plan) =>
       (plan.ringW / Fasteners.toeKickSpacing).ceil();
 
-  /// 1" brads for the four 1/4" backs: every edge plus every shelf and
-  /// divider they cover.
-  int backBrads(Plan plan) {
+  /// 1" brads for back panel [index] (0 left column, 1 right column, 2 top
+  /// bar, 3 bottom bar): every edge plus every shelf and divider behind it.
+  int backPanelBrads(Plan plan, int index) {
     final i = plan.inputs;
-    var run =
-        2 * (plan.ringH + i.left) +
-        2 * (plan.ringH + i.right) +
-        2 * (i.openW + i.top) +
-        2 * (i.openW + i.bottom);
-    for (final c in [plan.leftCol, plan.rightCol]) {
-      run += c.shelves * c.colW + c.dividers * (c.shelves + 1) * c.clearH;
-    }
-    for (final b in [plan.topBar, plan.bottomBar]) {
-      run += b.dividers * b.clearH;
+    double run;
+    if (index < 2) {
+      final c = index == 0 ? plan.leftCol : plan.rightCol;
+      final w = index == 0 ? i.left : i.right;
+      run =
+          2 * (plan.ringH + w) +
+          c.shelves * c.colW +
+          c.dividers * (c.shelves + 1) * c.clearH;
+    } else {
+      final b = index == 2 ? plan.topBar : plan.bottomBar;
+      final h = index == 2 ? i.top : i.bottom;
+      run = 2 * (i.openW + h) + b.dividers * b.clearH;
       if (b.tiers == 2) run += (b.dividers + 1) * b.bayW;
     }
     return (run / Fasteners.nailSpacing).ceil();
+  }
+
+  /// 1" brads for all four 1/4" backs.
+  int backBrads(Plan plan) {
+    var total = 0;
+    for (var k = 0; k < 4; k++) {
+      total += backPanelBrads(plan, k);
+    }
+    return total;
   }
 
   /// Length of each unit French cleat piece: two rows on each column.
@@ -68,7 +78,7 @@ class FastenerCounter {
   /// 3" screws for the wall half.
   int pieceScrews(Plan plan, int index, {required bool wall}) {
     final len = cleatPieceLengths(plan)[index];
-    if (wall) return 2 * math.max(1, (len / Limits.studSpacing).ceil());
+    if (wall) return wallPieceScrews(plan, len);
     final gaps = math.max(
       1,
       ((len - 2 * Fasteners.cleatEndInset) / Fasteners.screwSpacing).ceil(),
@@ -89,11 +99,30 @@ class FastenerCounter {
     return total;
   }
 
-  /// 3" screws for the wall half: two per stud, at least one stud a piece.
+  /// Screws for one wall cleat piece of length [len].
+  ///
+  /// On a stud wall that is two 3" screws per stud (at least one stud a
+  /// piece). On a concrete wall it is pairs of concrete screws, one pair
+  /// [Fasteners.concreteEndInset] from each end and another at least every
+  /// [Fasteners.concreteSpacing] between.
+  int wallPieceScrews(Plan plan, double len) {
+    if (plan.inputs.concreteWall) {
+      final gaps = math.max(
+        1,
+        ((len - 2 * Fasteners.concreteEndInset) / Fasteners.concreteSpacing)
+            .ceil(),
+      );
+      return 2 * (gaps + 1);
+    }
+    return 2 * math.max(1, (len / plan.inputs.studSpacing).ceil());
+  }
+
+  /// Screws for the whole wall half: 3" screws on a stud wall, concrete
+  /// screws on a concrete wall.
   int wallCleatScrews(Plan plan) {
     var total = 0;
     for (final len in cleatPieceLengths(plan)) {
-      total += 2 * math.max(1, (len / Limits.studSpacing).ceil());
+      total += wallPieceScrews(plan, len);
     }
     return total;
   }

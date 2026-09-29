@@ -6,16 +6,24 @@ import 'package:bookshelf_builder/features/planner/domain/models/limits.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/part.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/sheet_plan.dart';
+import 'package:bookshelf_builder/features/planner/domain/services/cut_layout_builder.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/parts_builder.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/strip_packer.dart';
 
 /// Estimates how many plywood sheets the cut list needs.
 class SheetEstimator {
   /// Creates an estimator.
-  const SheetEstimator({this.packer = const StripPacker()});
+  const SheetEstimator({
+    this.packer = const StripPacker(),
+    this.layout = const CutLayoutBuilder(),
+  });
 
   /// Strip packing strategy.
   final StripPacker packer;
+
+  /// Lays the pieces out on sheets. The sheet counts never go below what the
+  /// layout the guide shows actually needs.
+  final CutLayoutBuilder layout;
 
   /// Estimates 3/4" and 1/4" sheets for [parts].
   ///
@@ -23,8 +31,8 @@ class SheetEstimator {
   /// decreasing, and grouped into sheets. Parts longer than a sheet are left
   /// out (the issue checker warns about them). Narrow strips (toe kick and
   /// anchor cleats) go into leftover sheet width when they all fit, otherwise
-  /// they cost extra strips. The 1/4" back is estimated from total area with
-  /// an 85 percent yield.
+  /// they cost extra strips. The 1/4" backs are counted from the cutting
+  /// layout, which packs them into rows on the sheet.
   SheetPlan estimate({
     required List<Part> parts,
     required Dimensions dims,
@@ -61,9 +69,12 @@ class SheetEstimator {
       final fits = inLast < perSheet && leftover >= narrowWidth;
       if (!fits) needed += (narrowWidth / stripWidth).ceil();
     }
-    final sheets34 = needed == 0 ? 0 : (needed / perSheet).ceil();
-    final backSheets =
-        (backArea / (Limits.sheetW * Limits.sheetL * Limits.backYield)).ceil();
+    final placed = layout.build(parts: parts, depthPanel: dims.depthPanel);
+    final layout34 = placed.where((s) => s.material == PartMaterial.ply34);
+    final layoutBacks = placed.where((s) => s.material == PartMaterial.ply14);
+    final formula34 = needed == 0 ? 0 : (needed / perSheet).ceil();
+    final sheets34 = max(formula34, layout34.length);
+    final backSheets = layoutBacks.length;
     return SheetPlan(
       stripsPerSheet: perSheet,
       neededStrips: needed,

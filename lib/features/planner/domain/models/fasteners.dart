@@ -20,6 +20,12 @@ class Fasteners {
   /// Distance from the edge of a cleat strip to a wall screw.
   static const double wallScrewEdgeInset = 1;
 
+  /// Distance from the end of a cleat strip to its first concrete screw.
+  static const double concreteEndInset = 1.5;
+
+  /// Largest spacing between pairs of concrete screws along a cleat strip.
+  static const double concreteSpacing = 12;
+
   /// Largest spacing between brads along a back panel.
   static const double nailSpacing = 6;
 

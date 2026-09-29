@@ -1,21 +1,18 @@
 import 'package:bookshelf_builder/features/planner/domain/models/pane_limits.dart';
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'pane_widths.freezed.dart';
 
 /// Preferred widths of the inputs and results panes. The drawing pane takes
 /// whatever width is left.
-class PaneWidths extends Equatable {
+@freezed
+abstract class PaneWidths with _$PaneWidths {
   /// Creates widths, defaulting to the standard layout.
-  const PaneWidths({
-    this.inputs = PaneLimits.defaultInputs,
-    this.results = PaneLimits.defaultResults,
-  });
+  const factory PaneWidths({
+    /// Width of the inputs pane.
+    @Default(PaneLimits.defaultInputs) double inputs,
 
-  /// Width of the inputs pane.
-  final double inputs;
-
-  /// Width of the results pane.
-  final double results;
-
-  @override
-  List<Object?> get props => [inputs, results];
+    /// Width of the results pane.
+    @Default(PaneLimits.defaultResults) double results,
+  }) = _PaneWidths;
 }

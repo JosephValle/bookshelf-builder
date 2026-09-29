@@ -1,37 +1,25 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'sheet_plan.freezed.dart';
 
 /// Plywood sheet estimate.
-class SheetPlan extends Equatable {
+@freezed
+abstract class SheetPlan with _$SheetPlan {
   /// Creates a sheet estimate.
-  const SheetPlan({
-    required this.stripsPerSheet,
-    required this.neededStrips,
-    required this.sheets34,
-    required this.backArea,
-    required this.backSheets,
-  });
+  const factory SheetPlan({
+    /// Strips of panel depth that one 4x8 sheet yields.
+    required int stripsPerSheet,
 
-  /// Strips of panel depth that one 4x8 sheet yields.
-  final int stripsPerSheet;
+    /// Strips of full sheet length needed for all 3/4" parts.
+    required int neededStrips,
 
-  /// Strips of full sheet length needed for all 3/4" parts.
-  final int neededStrips;
+    /// Number of 3/4" sheets to buy.
+    required int sheets34,
 
-  /// Number of 3/4" sheets to buy.
-  final int sheets34;
+    /// Total 1/4" back panel area in square inches.
+    required double backArea,
 
-  /// Total 1/4" back panel area in square inches.
-  final double backArea;
-
-  /// Approximate number of 1/4" sheets to buy.
-  final int backSheets;
-
-  @override
-  List<Object?> get props => [
-    stripsPerSheet,
-    neededStrips,
-    sheets34,
-    backArea,
-    backSheets,
-  ];
+    /// Approximate number of 1/4" sheets to buy.
+    required int backSheets,
+  }) = _SheetPlan;
 }
