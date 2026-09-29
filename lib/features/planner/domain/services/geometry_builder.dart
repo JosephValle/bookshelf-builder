@@ -86,12 +86,18 @@ class GeometryBuilder {
           : null,
       bays: bays,
       windowBox: Box(
-        inputs.left + inputs.gapLeft,
-        inputs.top + inputs.gapTop,
+        inputs.left + inputs.insetLeft,
+        inputs.top + inputs.insetTop,
         inputs.windowW,
         inputs.windowH,
       ),
       openingBox: Box(inputs.left, inputs.top, inputs.openW, inputs.openH),
+      trimBox: Box(
+        inputs.left + inputs.gapLeft,
+        inputs.top + inputs.gapTop,
+        inputs.windowW + inputs.trimLeft + inputs.trimRight,
+        inputs.windowH + inputs.trimTop + inputs.trimBottom,
+      ),
     );
   }
 }

@@ -33,14 +33,14 @@ class WallInputs extends StatelessWidget {
     const f = InchesFormatter();
     final wallW = inputs.wallW;
     final position = inputs.windowLeftOnWall;
-    final minX = inputs.wallMarginLeft + inputs.gapLeft;
+    final minX = inputs.wallMarginLeft + inputs.insetLeft;
     final maxX =
         minX +
         ((inputs.usableWallW ?? 0.0) - inputs.openW).clamp(
           1.0,
           double.infinity,
         );
-    final minY = inputs.gapBottom;
+    final minY = inputs.insetBottom;
     final maxY =
         minY +
         ((inputs.usableWallH ?? 0.0) - inputs.openH).clamp(

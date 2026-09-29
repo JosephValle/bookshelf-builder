@@ -1,6 +1,7 @@
 import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/planner_notes.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/sides.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/inches_formatter.dart';
 
 /// Renders a plain-text summary of a plan for pasting into notes or messages.
@@ -21,11 +22,8 @@ class SummaryBuilder {
         'Ring: ${f(plan.ringW)} wide by ${f(plan.ringH)} tall, ${f(i.depth)} deep',
       )
       ..writeln('Window: ${f(i.windowW)} by ${f(i.windowH)}')
-      ..writeln(
-        i.gapTop + i.gapBottom + i.gapLeft + i.gapRight > 0
-            ? 'Gaps around window: top ${f(i.gapTop)}, bottom ${f(i.gapBottom)}, left ${f(i.gapLeft)}, right ${f(i.gapRight)}'
-            : 'Gaps around window: none',
-      )
+      ..writeln(_sides('Trim around window', i.trim))
+      ..writeln(_sides('Gaps around window', i.gap))
       ..writeln('Columns: left ${f(i.left)}, right ${f(i.right)}')
       ..writeln('Bars: top ${f(i.top)}, bottom ${f(i.bottom)}')
       ..writeln('Toe kick: ${i.onFloor ? f(i.toeKick) : 'none'}')
@@ -59,5 +57,11 @@ class SummaryBuilder {
       ..writeln(PlannerNotes.store)
       ..writeln(PlannerNotes.disclaimer);
     return b.toString();
+  }
+
+  String _sides(String label, Sides s) {
+    if (s == const Sides()) return '$label: none';
+    final f = formatter.format;
+    return '$label: top ${f(s.top)}, bottom ${f(s.bottom)}, left ${f(s.left)}, right ${f(s.right)}';
   }
 }

@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import 'package:bookshelf_builder/features/planner/domain/models/sides.dart';
+
 /// Every value the user can change. Immutable; use [copyWith] to derive edits.
 ///
 /// All lengths are in inches. The defaults describe a 48" square window with
@@ -27,6 +29,10 @@ class Inputs extends Equatable {
     this.wallMarginRight = 0,
     this.windowFromWallLeft,
     this.windowFromFloor,
+    this.trimTop = 0,
+    this.trimBottom = 0,
+    this.trimLeft = 0,
+    this.trimRight = 0,
     this.gapTop = 0,
     this.gapBottom = 0,
     this.gapLeft = 0,
@@ -39,24 +45,59 @@ class Inputs extends Equatable {
   /// Window height.
   final double windowH;
 
-  /// Gap left between the window and the shelves above it (trim, casing).
+  /// Trim (casing) on the window's top side. Trim is the boards around the
+  /// window itself; gaps are extra clearance beyond the trim.
+  final double trimTop;
+
+  /// Trim on the window's bottom side.
+  final double trimBottom;
+
+  /// Trim on the window's left side.
+  final double trimLeft;
+
+  /// Trim on the window's right side.
+  final double trimRight;
+
+  /// Clearance left between the trim (or the window) and the shelves above.
   final double gapTop;
 
-  /// Gap between the window and the shelves below it.
+  /// Clearance between the trim (or the window) and the shelves below.
   final double gapBottom;
 
-  /// Gap between the window and the left column.
+  /// Clearance between the trim (or the window) and the left column.
   final double gapLeft;
 
-  /// Gap between the window and the right column.
+  /// Clearance between the trim (or the window) and the right column.
   final double gapRight;
 
-  /// Width of the framed opening the ring surrounds: the window plus its
-  /// left and right gaps.
-  double get openW => windowW + gapLeft + gapRight;
+  /// The trim on all four sides.
+  Sides get trim =>
+      Sides(top: trimTop, bottom: trimBottom, left: trimLeft, right: trimRight);
 
-  /// Height of the framed opening: the window plus its top and bottom gaps.
-  double get openH => windowH + gapTop + gapBottom;
+  /// The gap on all four sides.
+  Sides get gap =>
+      Sides(top: gapTop, bottom: gapBottom, left: gapLeft, right: gapRight);
+
+  /// Distance from the framed opening's left edge to the window (trim plus
+  /// gap).
+  double get insetLeft => trimLeft + gapLeft;
+
+  /// Distance from the framed opening's right edge to the window.
+  double get insetRight => trimRight + gapRight;
+
+  /// Distance from the framed opening's top edge to the window.
+  double get insetTop => trimTop + gapTop;
+
+  /// Distance from the framed opening's bottom edge to the window.
+  double get insetBottom => trimBottom + gapBottom;
+
+  /// Width of the framed opening the ring surrounds: the window plus its
+  /// trim and gaps on the left and right.
+  double get openW => windowW + insetLeft + insetRight;
+
+  /// Height of the framed opening: the window plus its trim and gaps on the
+  /// top and bottom.
+  double get openH => windowH + insetTop + insetBottom;
 
   /// Left column outer width.
   final double left;
@@ -137,7 +178,7 @@ class Inputs extends Equatable {
     final usable = usableWallW;
     if (usable == null) return null;
     final room = (usable - openW).clamp(0.0, double.infinity);
-    final lo = wallMarginLeft + gapLeft;
+    final lo = wallMarginLeft + insetLeft;
     return (windowFromWallLeft ?? lo + room / 2).clamp(lo, lo + room);
   }
 
@@ -145,7 +186,7 @@ class Inputs extends Equatable {
   /// wall width is set.
   double? get effectiveRingOffset {
     final p = windowLeftOnWall;
-    return p == null ? null : p - gapLeft - left;
+    return p == null ? null : p - insetLeft - left;
   }
 
   /// Height of the wall below the top margin, or null when no wall height is
@@ -165,9 +206,9 @@ class Inputs extends Equatable {
     final usable = usableWallH;
     if (usable == null) return null;
     final room = (usable - openH).clamp(0.0, double.infinity);
-    return (windowFromFloor ?? gapBottom + room / 2).clamp(
-      gapBottom,
-      gapBottom + room,
+    return (windowFromFloor ?? insetBottom + room / 2).clamp(
+      insetBottom,
+      insetBottom + room,
     );
   }
 
@@ -185,8 +226,8 @@ class Inputs extends Equatable {
     final px = windowLeftOnWall;
     if (w != null && px != null) {
       r = r.copyWith(
-        left: (px - gapLeft - wallMarginLeft).clamp(0.0, double.infinity),
-        right: (w - wallMarginRight - px - windowW - gapRight).clamp(
+        left: (px - insetLeft - wallMarginLeft).clamp(0.0, double.infinity),
+        right: (w - wallMarginRight - px - windowW - insetRight).clamp(
           0.0,
           double.infinity,
         ),
@@ -196,8 +237,8 @@ class Inputs extends Equatable {
     final py = windowBottomOnWall;
     if (usable != null && py != null) {
       r = r.copyWith(
-        bottom: (py - gapBottom).clamp(0.0, double.infinity),
-        top: (usable - py - windowH - gapTop).clamp(0.0, double.infinity),
+        bottom: (py - insetBottom).clamp(0.0, double.infinity),
+        top: (usable - py - windowH - insetTop).clamp(0.0, double.infinity),
       );
     }
     return r;
@@ -228,6 +269,10 @@ class Inputs extends Equatable {
     double? wallMarginRight,
     double? Function()? windowFromWallLeft,
     double? Function()? windowFromFloor,
+    double? trimTop,
+    double? trimBottom,
+    double? trimLeft,
+    double? trimRight,
     double? gapTop,
     double? gapBottom,
     double? gapLeft,
@@ -258,6 +303,10 @@ class Inputs extends Equatable {
       windowFromFloor: windowFromFloor != null
           ? windowFromFloor()
           : this.windowFromFloor,
+      trimTop: trimTop ?? this.trimTop,
+      trimBottom: trimBottom ?? this.trimBottom,
+      trimLeft: trimLeft ?? this.trimLeft,
+      trimRight: trimRight ?? this.trimRight,
       gapTop: gapTop ?? this.gapTop,
       gapBottom: gapBottom ?? this.gapBottom,
       gapLeft: gapLeft ?? this.gapLeft,

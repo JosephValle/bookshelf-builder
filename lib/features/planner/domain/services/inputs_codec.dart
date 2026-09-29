@@ -12,6 +12,10 @@ class InputsCodec {
   Map<String, Object?> encode(Inputs i) => {
     'windowW': i.windowW,
     'windowH': i.windowH,
+    'trimTop': i.trimTop,
+    'trimBottom': i.trimBottom,
+    'trimLeft': i.trimLeft,
+    'trimRight': i.trimRight,
     'gapTop': i.gapTop,
     'gapBottom': i.gapBottom,
     'gapLeft': i.gapLeft,
@@ -58,6 +62,10 @@ class InputsCodec {
     return Inputs(
       windowW: positive('windowW', d.windowW),
       windowH: positive('windowH', d.windowH),
+      trimTop: opt('trimTop') ?? 0,
+      trimBottom: opt('trimBottom') ?? 0,
+      trimLeft: opt('trimLeft') ?? 0,
+      trimRight: opt('trimRight') ?? 0,
       gapTop: opt('gapTop') ?? 0,
       gapBottom: opt('gapBottom') ?? 0,
       gapLeft: opt('gapLeft') ?? 0,

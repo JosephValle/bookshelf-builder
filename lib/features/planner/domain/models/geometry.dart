@@ -11,6 +11,7 @@ class Geometry extends Equatable {
     required this.bays,
     required this.windowBox,
     required this.openingBox,
+    required this.trimBox,
   });
 
   /// Every 3/4" panel seen from the front.
@@ -25,9 +26,19 @@ class Geometry extends Equatable {
   /// The window itself.
   final Box windowBox;
 
-  /// The framed opening the ring surrounds: the window plus its gaps.
+  /// The framed opening the ring surrounds: the window plus trim and gaps.
   final Box openingBox;
 
+  /// The window plus its trim (the opening without the gaps).
+  final Box trimBox;
+
   @override
-  List<Object?> get props => [panels, toeKickBox, bays, windowBox, openingBox];
+  List<Object?> get props => [
+    panels,
+    toeKickBox,
+    bays,
+    windowBox,
+    openingBox,
+    trimBox,
+  ];
 }

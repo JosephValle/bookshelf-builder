@@ -30,6 +30,10 @@ class InputRanges {
   static const double shelfWidthMin = 12;
   static const double shelfWidthMax = 36;
 
+  /// Window trim slider range.
+  static const double trimMin = 0;
+  static const double trimMax = 8;
+
   /// Gap around the window slider range.
   static const double gapMin = 0;
   static const double gapMax = 12;
