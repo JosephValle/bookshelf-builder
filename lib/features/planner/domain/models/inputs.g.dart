@@ -1,0 +1,73 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'inputs.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+_Inputs _$InputsFromJson(Map<String, dynamic> json) => _Inputs(
+  windowW: (json['windowW'] as num?)?.toDouble() ?? 48,
+  windowH: (json['windowH'] as num?)?.toDouble() ?? 48,
+  trimTop: (json['trimTop'] as num?)?.toDouble() ?? 0,
+  trimBottom: (json['trimBottom'] as num?)?.toDouble() ?? 0,
+  trimLeft: (json['trimLeft'] as num?)?.toDouble() ?? 0,
+  trimRight: (json['trimRight'] as num?)?.toDouble() ?? 0,
+  gapTop: (json['gapTop'] as num?)?.toDouble() ?? 0,
+  gapBottom: (json['gapBottom'] as num?)?.toDouble() ?? 0,
+  gapLeft: (json['gapLeft'] as num?)?.toDouble() ?? 0,
+  gapRight: (json['gapRight'] as num?)?.toDouble() ?? 0,
+  left: (json['left'] as num?)?.toDouble() ?? 14,
+  right: (json['right'] as num?)?.toDouble() ?? 14,
+  top: (json['top'] as num?)?.toDouble() ?? 14,
+  bottom: (json['bottom'] as num?)?.toDouble() ?? 14,
+  depth: (json['depth'] as num?)?.toDouble() ?? 11.25,
+  onFloor: json['onFloor'] as bool? ?? true,
+  toeKick: (json['toeKick'] as num?)?.toDouble() ?? 3.5,
+  targetClearH: (json['targetClearH'] as num?)?.toDouble() ?? 11,
+  edgeStiffener: json['edgeStiffener'] as bool? ?? false,
+  maxShelfWidth: (json['maxShelfWidth'] as num?)?.toDouble() ?? 24,
+  fillWall: json['fillWall'] as bool? ?? true,
+  concreteWall: json['concreteWall'] as bool? ?? false,
+  studSpacing: (json['studSpacing'] as num?)?.toDouble() ?? Limits.studSpacing,
+  wallW: (json['wallW'] as num?)?.toDouble(),
+  wallH: (json['wallH'] as num?)?.toDouble(),
+  wallMarginTop: (json['wallMarginTop'] as num?)?.toDouble() ?? 0,
+  wallMarginLeft: (json['wallMarginLeft'] as num?)?.toDouble() ?? 0,
+  wallMarginRight: (json['wallMarginRight'] as num?)?.toDouble() ?? 0,
+  windowFromWallLeft: (json['windowFromWallLeft'] as num?)?.toDouble(),
+  windowFromFloor: (json['windowFromFloor'] as num?)?.toDouble(),
+);
+
+Map<String, dynamic> _$InputsToJson(_Inputs instance) => <String, dynamic>{
+  'windowW': instance.windowW,
+  'windowH': instance.windowH,
+  'trimTop': instance.trimTop,
+  'trimBottom': instance.trimBottom,
+  'trimLeft': instance.trimLeft,
+  'trimRight': instance.trimRight,
+  'gapTop': instance.gapTop,
+  'gapBottom': instance.gapBottom,
+  'gapLeft': instance.gapLeft,
+  'gapRight': instance.gapRight,
+  'left': instance.left,
+  'right': instance.right,
+  'top': instance.top,
+  'bottom': instance.bottom,
+  'depth': instance.depth,
+  'onFloor': instance.onFloor,
+  'toeKick': instance.toeKick,
+  'targetClearH': instance.targetClearH,
+  'edgeStiffener': instance.edgeStiffener,
+  'maxShelfWidth': instance.maxShelfWidth,
+  'fillWall': instance.fillWall,
+  'concreteWall': instance.concreteWall,
+  'studSpacing': instance.studSpacing,
+  'wallW': instance.wallW,
+  'wallH': instance.wallH,
+  'wallMarginTop': instance.wallMarginTop,
+  'wallMarginLeft': instance.wallMarginLeft,
+  'wallMarginRight': instance.wallMarginRight,
+  'windowFromWallLeft': instance.windowFromWallLeft,
+  'windowFromFloor': instance.windowFromFloor,
+};
