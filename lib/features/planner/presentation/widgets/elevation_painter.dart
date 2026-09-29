@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:bookshelf_builder/app/theme/app_colors.dart';
 import 'package:bookshelf_builder/app/theme/app_type.dart';
 import 'package:bookshelf_builder/app/theme/sizes.dart';
@@ -35,8 +37,7 @@ class ElevationPainter extends CustomPainter {
     final ringH = plan.ringH;
     final wallW = i.wallW;
     final wallH = i.wallH;
-    final offset =
-        i.ringOffsetFromLeft ?? (wallW != null ? (wallW - ringW) / 2 : 0.0);
+    final offset = plan.ringOffsetOnWall ?? 0.0;
     final sceneLeft = wallW != null ? -offset : 0.0;
     final sceneRight = wallW != null ? wallW - offset : ringW;
     final sceneTop = wallH != null ? ringH - wallH : 0.0;
@@ -107,7 +108,7 @@ class ElevationPainter extends CustomPainter {
           r.center,
           size: AppType.drawingBay,
           color: ink,
-          maxW: r.width - 4,
+          maxW: math.max(0, r.width - 4),
         );
       }
     }
@@ -119,7 +120,7 @@ class ElevationPainter extends CustomPainter {
       wr.center,
       size: AppType.drawingWindow,
       color: AppColors.windowInk,
-      maxW: wr.width - 4,
+      maxW: math.max(0, wr.width - 4),
     );
 
     final ring = Rect.fromLTWH(ox, oy, ringW * s, ringH * s);

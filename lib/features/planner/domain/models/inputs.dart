@@ -65,6 +65,18 @@ class Inputs extends Equatable {
   /// Optional horizontal position of the ring on the wall.
   final double? ringOffsetFromLeft;
 
+  /// Horizontal position of the ring's left edge on the wall, or null when no
+  /// wall width is set.
+  ///
+  /// Uses [ringOffsetFromLeft] when given. Otherwise the window is centered on
+  /// the wall, which differs from centering the whole ring when the two
+  /// columns are different widths.
+  double? get effectiveRingOffset {
+    final w = wallW;
+    if (w == null) return null;
+    return ringOffsetFromLeft ?? w / 2 - left - windowW / 2;
+  }
+
   /// Returns a copy with the given fields replaced.
   ///
   /// The optional wall fields take a callback so that they can be cleared:

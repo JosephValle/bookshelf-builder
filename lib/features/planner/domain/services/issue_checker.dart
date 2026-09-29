@@ -17,6 +17,9 @@ class IssueChecker {
   final InchesFormatter formatter;
 
   /// Checks [inputs], the derived [dims], the [parts] and the [bays].
+  ///
+  /// When a wall width is set the ring position (the user's offset, or the
+  /// window centered on the wall) must also fit within the wall.
   List<Issue> check({
     required Inputs inputs,
     required Dimensions dims,
@@ -103,7 +106,7 @@ class IssueChecker {
         );
       }
     }
-    final offset = inputs.ringOffsetFromLeft;
+    final offset = inputs.effectiveRingOffset;
     if (wallW != null && offset != null) {
       if (offset < 0 || offset + dims.ringW > wallW + 1e-9) {
         add(

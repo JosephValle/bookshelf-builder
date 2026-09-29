@@ -123,11 +123,12 @@ class InputsPanel extends StatelessWidget {
           value: inputs.edgeStiffener,
           onChanged: (v) => onChanged(inputs.copyWith(edgeStiffener: v)),
         ),
-        ExpansionTile(
-          tilePadding: EdgeInsets.zero,
-          title: const Text('Wall fit check (optional)'),
-          children: [WallInputs(inputs: inputs, onChanged: onChanged)],
+        const SectionHeading('Wall (optional)'),
+        const Text(
+          'Enter the wall size to see it in the drawing and check the fit. '
+          'The window is centered on the wall unless you set an offset.',
         ),
+        WallInputs(inputs: inputs, onChanged: onChanged),
         const SizedBox(height: Space.md),
         Align(
           alignment: Alignment.centerLeft,

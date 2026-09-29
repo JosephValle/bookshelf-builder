@@ -74,6 +74,10 @@ class Plan extends Equatable {
   /// Active maximum clear shelf span.
   double get spanLimit => dimensions.spanLimit;
 
+  /// Horizontal position of the ring on the wall (see
+  /// [Inputs.effectiveRingOffset]).
+  double? get ringOffsetOnWall => inputs.effectiveRingOffset;
+
   /// Issues with [Severity.error].
   List<Issue> get errors =>
       issues.where((i) => i.severity == Severity.error).toList();

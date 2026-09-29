@@ -18,9 +18,19 @@ class CutListCsvBuilder {
           ? ''
           : formatter.format(p.width);
       b.writeln(
-        '"${p.name}",${p.qty},"${formatter.partLength(p)}","$width","${p.material.label}"',
+        [
+          _quote(p.name),
+          '${p.qty}',
+          _quote(formatter.partLength(p)),
+          _quote(width),
+          _quote(p.material.label),
+        ].join(','),
       );
     }
     return b.toString();
   }
+
+  /// Wraps [value] in quotes and doubles any embedded quote, so inch marks
+  /// such as `76"` survive as valid CSV.
+  String _quote(String value) => '"${value.replaceAll('"', '""')}"';
 }
