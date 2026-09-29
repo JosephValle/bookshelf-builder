@@ -34,7 +34,8 @@ class InputsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fillsWall = inputs.wallW != null && inputs.fillWall;
+    final fillsWidth = inputs.wallW != null && inputs.fillWall;
+    final fillsHeight = inputs.wallH != null && inputs.fillWall;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -53,41 +54,76 @@ class InputsPanel extends StatelessWidget {
           max: InputRanges.windowHMax,
           onChanged: (v) => onChanged(inputs.copyWith(windowH: v)),
         ),
+        const SectionHeading('Gap around the window'),
+        DimField(
+          label: 'Gap above',
+          value: inputs.gapTop,
+          min: InputRanges.gapMin,
+          max: InputRanges.gapMax,
+          allowZero: true,
+          onChanged: (v) => onChanged(inputs.copyWith(gapTop: v)),
+        ),
+        DimField(
+          label: 'Gap below',
+          value: inputs.gapBottom,
+          min: InputRanges.gapMin,
+          max: InputRanges.gapMax,
+          allowZero: true,
+          onChanged: (v) => onChanged(inputs.copyWith(gapBottom: v)),
+        ),
+        DimField(
+          label: 'Gap left',
+          value: inputs.gapLeft,
+          min: InputRanges.gapMin,
+          max: InputRanges.gapMax,
+          allowZero: true,
+          onChanged: (v) => onChanged(inputs.copyWith(gapLeft: v)),
+        ),
+        DimField(
+          label: 'Gap right',
+          value: inputs.gapRight,
+          min: InputRanges.gapMin,
+          max: InputRanges.gapMax,
+          allowZero: true,
+          onChanged: (v) => onChanged(inputs.copyWith(gapRight: v)),
+        ),
         const SectionHeading('Columns and bars'),
-        if (fillsWall)
+        if (fillsWidth || fillsHeight)
           const Padding(
             padding: EdgeInsets.only(bottom: Space.sm),
             child: Text(
-              'Column widths come from the wall. Turn off "Columns fill the '
-              'wall width" to set them yourself.',
+              'Sizes come from the wall. Turn off "Fill the wall up to the '
+              'margins" to set them yourself.',
             ),
           ),
         DimField(
           label: 'Left column',
-          enabled: !fillsWall,
-          value: fillsWall ? plan.inputs.left : inputs.left,
+          enabled: !fillsWidth,
+          value: fillsWidth ? plan.inputs.left : inputs.left,
           min: InputRanges.sectionMin,
           max: InputRanges.sectionMax,
           onChanged: (v) => onChanged(inputs.copyWith(left: v)),
         ),
         DimField(
           label: 'Right column',
-          enabled: !fillsWall,
-          value: fillsWall ? plan.inputs.right : inputs.right,
+          enabled: !fillsWidth,
+          value: fillsWidth ? plan.inputs.right : inputs.right,
           min: InputRanges.sectionMin,
           max: InputRanges.sectionMax,
           onChanged: (v) => onChanged(inputs.copyWith(right: v)),
         ),
         DimField(
           label: 'Top bar',
-          value: inputs.top,
+          enabled: !fillsHeight,
+          value: fillsHeight ? plan.inputs.top : inputs.top,
           min: InputRanges.sectionMin,
           max: InputRanges.sectionMax,
           onChanged: (v) => onChanged(inputs.copyWith(top: v)),
         ),
         DimField(
           label: 'Bottom bar',
-          value: inputs.bottom,
+          enabled: !fillsHeight,
+          value: fillsHeight ? plan.inputs.bottom : inputs.bottom,
           min: InputRanges.sectionMin,
           max: InputRanges.sectionMax,
           onChanged: (v) => onChanged(inputs.copyWith(bottom: v)),

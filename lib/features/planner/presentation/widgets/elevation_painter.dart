@@ -115,7 +115,9 @@ class ElevationPainter extends CustomPainter {
     );
 
     final geo = plan.geometry;
-    canvas.drawRect(rect(geo.windowBox), Paint()..color = AppColors.window);
+    canvas
+      ..drawRect(rect(geo.openingBox), Paint()..color = AppColors.gap)
+      ..drawRect(rect(geo.windowBox), Paint()..color = AppColors.window);
 
     final wood = Paint()..color = AppColors.wood;
     final edge = Paint()

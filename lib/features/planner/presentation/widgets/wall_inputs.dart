@@ -33,9 +33,24 @@ class WallInputs extends StatelessWidget {
     const f = InchesFormatter();
     final wallW = inputs.wallW;
     final position = inputs.windowLeftOnWall;
-    final room = wallW == null
-        ? 0.0
-        : (wallW - inputs.windowW).clamp(1.0, double.infinity);
+    final minX = inputs.wallMarginLeft + inputs.gapLeft;
+    final maxX =
+        minX +
+        ((inputs.usableWallW ?? 0.0) - inputs.openW).clamp(
+          1.0,
+          double.infinity,
+        );
+    final minY = inputs.gapBottom;
+    final maxY =
+        minY +
+        ((inputs.usableWallH ?? 0.0) - inputs.openH).clamp(
+          1.0,
+          double.infinity,
+        );
+    final columns =
+        'Left column ${f.format(plan.inputs.left)}, right column ${f.format(plan.inputs.right)}';
+    final bars =
+        'Top bar ${f.format(plan.inputs.top)}, bottom bar ${f.format(plan.inputs.bottom)}';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -83,35 +98,52 @@ class WallInputs extends StatelessWidget {
               onChanged: (v) => onChanged(inputs.copyWith(wallMarginTop: v)),
             ),
         ],
-        if (wallW != null) ...[
+        if (wallW != null || inputs.wallH != null) ...[
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Columns fill the wall width'),
+            title: const Text('Fill the wall up to the margins'),
             value: inputs.fillWall,
             onChanged: (v) => onChanged(inputs.copyWith(fillWall: v)),
           ),
-          DimField(
-            label: 'Window from wall left',
-            value: position,
-            min: 0,
-            max: room,
-            allowZero: true,
-            onChanged: (v) =>
-                onChanged(inputs.copyWith(windowFromWallLeft: () => v)),
-          ),
+          if (wallW != null)
+            DimField(
+              label: 'Window from wall left',
+              value: position,
+              min: minX,
+              max: maxX,
+              allowZero: true,
+              onChanged: (v) =>
+                  onChanged(inputs.copyWith(windowFromWallLeft: () => v)),
+            ),
+          if (inputs.wallH != null)
+            DimField(
+              label: 'Window from floor',
+              value: inputs.windowBottomOnWall,
+              min: minY,
+              max: maxY,
+              allowZero: true,
+              onChanged: (v) =>
+                  onChanged(inputs.copyWith(windowFromFloor: () => v)),
+            ),
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton(
-              onPressed: () =>
-                  onChanged(inputs.copyWith(windowFromWallLeft: () => null)),
+              onPressed: () => onChanged(
+                inputs.copyWith(
+                  windowFromWallLeft: () => null,
+                  windowFromFloor: () => null,
+                ),
+              ),
               child: const Text('Center window on wall'),
             ),
           ),
           Padding(
             padding: const EdgeInsets.only(bottom: Space.sm),
             child: Text(
-              'Left column ${f.format(plan.inputs.left)}, '
-              'right column ${f.format(plan.inputs.right)}',
+              [
+                if (wallW != null) columns,
+                if (inputs.wallH != null) bars,
+              ].join('\n'),
             ),
           ),
         ],
