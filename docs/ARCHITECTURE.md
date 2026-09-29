@@ -53,7 +53,7 @@ user edits a field
 | `SheetEstimator` | Plywood sheet count |
 | `IssueChecker` | Warnings, errors and notes |
 
-Around the plan there are a few more services: `CostEstimator` (prices the sheets), `ToolRecommender`, `AssemblyGuideBuilder` (tools, hardware, checkpoints and the piece map; with `AssemblyDiagramBuilder`, `PieceIds`, `FastenerCounter` and `CleatLayout` behind it), and the `CutListCsvBuilder` and `SummaryBuilder` text exporters. The screen, the PDF and the text exports all read from the same `Plan`.
+Around the plan there are a few more services: `CostEstimator` (prices the sheets), `CutLayoutBuilder` (lays every piece out on the plywood sheets, which the sheet counts and the guide both use), `ToolRecommender`, `AssemblyGuideBuilder` (tools, hardware, checkpoints, the sheet cutting steps and the piece map; with `AssemblyDiagramBuilder`, `PieceIds`, `FastenerCounter` and `CleatLayout` behind it), and the `CutListCsvBuilder` and `SummaryBuilder` text exporters. The screen, the PDF and the text exports all read from the same `Plan`.
 
 Before any of that, `Inputs.resolved` grows the columns and bars to fill the wall when a wall size is set.
 
@@ -61,7 +61,7 @@ Before any of that, `Inputs.resolved` grows the columns and bars to fill the wal
 
 - `PaneLayoutCubit` holds the widths of the inputs and results panes. `PaneLayoutCalculator` enforces minimum widths and turns drags into new widths.
 - `InputsStore` and `PaneLayoutStore` are ports. The app uses `shared_preferences` implementations that never throw.
-- `ClipboardWriter` and `PdfExporter` are ports for copying text and opening the print dialog.
+- `ClipboardWriter` and `PdfExporter` are ports for copying text and for the PDF. `PdfExporter` opens the print dialog, and where the platform allows it (macOS) it can also save the file through the system save panel and show it in Finder. That goes through a small native channel, `shelf_planner/files`, in `macos/Runner/MainFlutterWindow.swift`, so it needs no package.
 
 ## Dependencies
 

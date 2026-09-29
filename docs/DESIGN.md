@@ -49,7 +49,7 @@ The bottom bar rests on the toe kick and floor when the unit is on the floor, so
 
 ## Wall mounting
 
-The unit hangs on a 3/4" plywood French cleat: two matching strips ripped with a 45 degree bevel. The wall half is screwed into the studs and the unit half is glued and screwed to the back of the unit, through the 1/4" back into a shelf or panel edge. Each half is `anchorCleatW` (3-1/2") wide and runs as one top row and one mid-height row on each column, so the cut list holds one strip of each half with length `2 * (left + right)`. Once hung, the unit stands about 3/4" off the wall. The bar over the window is also anchored through its solid anchor cleat, with 3/4" scrap spacers behind the screws.
+The unit hangs on a 3/4" plywood French cleat: two matching strips ripped with a 45 degree bevel. The wall half is screwed into the studs and the unit half is glued and screwed to the back of the unit, through the 1/4" back into a shelf or panel edge. Each half is `anchorCleatW` (3-1/2") wide and has one piece for the top row and one for the mid-height row on each column. The cut list lists them as four lines, two per half and column (`Wall French cleat, left column` and so on), each as long as its column is wide, so a wide column never makes a strip longer than a sheet. Once hung, the unit stands about 3/4" off the wall. The bar over the window is also anchored through its solid anchor cleat, with 3/4" scrap spacers behind the screws.
 
 ## Piece ids and the assembly guide
 
@@ -96,9 +96,15 @@ With fill off, the ring keeps its own size and the checks report whether it fits
 
 - `stripsPerSheet = floor((sheetW + kerf) / (depthPanel + kerf))`
 - 3/4" parts are packed into strips of `depthPanel` width, first fit decreasing, with a kerf after each part
-- the toe kick, anchor cleats and both French cleat halves are narrower, and share leftover width or cost extra strips
+- the toe kick, anchor cleats and both French cleat halves are narrower. They are ripped from the width left over on the last sheet, several short ones sharing a row, and spill onto a new sheet when they do not fit
 - parts longer than a sheet are left out and raise a warning
-- 1/4" backs: `ceil(total area / (sheetW * sheetL * 0.85))`, approximate
+- 1/4" backs are packed into rows on the sheet, each cut 1/16" under size on every edge (as the guide says). A back bigger than a sheet in either direction is cut in equal pieces named `J1a`, `J1b`, to be joined behind a divider or over a 3/4" by 2" backer strip, and the plan raises a note
+
+## Cutting layout
+
+`CutLayoutBuilder` lays every piece of the cut list out on 4x8 sheets, to scale: strips ripped along the length, each crosscut into pieces, with a kerf between neighbours. It is the same arrangement the guide draws, so the sheet counts in the materials list, the cost and the pictures always agree (`SheetEstimator` takes them from the layout).
+
+The guide has one step per sheet ("Cut 3/4" sheet 2 of 6"): a to-scale picture with every piece labelled by its id, the width of each strip, and the length of each piece written on it when it fits. Under the picture it lists the rip marks (distances from the top long edge to draw, cutting just past each on the waste side), the crosscut marks for every strip, and a legend with the size of every part on the sheet. The pale area is waste. The 1/4" backs get the same treatment.
 
 ## Cost estimate
 
