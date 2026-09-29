@@ -46,15 +46,19 @@ void main() {
     });
 
     test('the toe kick step is skipped off the floor', () {
-      expect(hasStep(steps(const Inputs(onFloor: false)), 'Build the toe kick'),
-          isFalse);
+      expect(
+        hasStep(steps(const Inputs(onFloor: false)), 'Build the toe kick'),
+        isFalse,
+      );
     });
 
     test('the edge band step appears only with the stiffener', () {
       expect(hasStep(steps(), 'Add the front edge band'), isFalse);
       expect(
-        hasStep(steps(const Inputs(edgeStiffener: true)),
-            'Add the front edge band'),
+        hasStep(
+          steps(const Inputs(edgeStiffener: true)),
+          'Add the front edge band',
+        ),
         isTrue,
       );
     });
@@ -121,8 +125,10 @@ void main() {
     });
 
     test('the guide never contains an em dash', () {
-      expect(allText(steps(const Inputs(edgeStiffener: true))).contains('—'),
-          isFalse);
+      expect(
+        allText(steps(const Inputs(edgeStiffener: true))).contains('—'),
+        isFalse,
+      );
     });
 
     test('materials step lists the sheet counts', () {

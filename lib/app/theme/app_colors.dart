@@ -18,7 +18,7 @@ class AppColors {
   static const Color window = Color(0xFFBFE3F7);
 
   /// Fill for the gap between the window and the shelves around it.
-  static const Color gap = Color(0xFFE6DCCB);
+  static const Color gap = Color(0xFFE8C98A);
 
   /// Text drawn on the window fill.
   static const Color windowInk = Color(0xFF1B4F72);

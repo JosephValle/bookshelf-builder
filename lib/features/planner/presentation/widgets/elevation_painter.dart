@@ -68,42 +68,59 @@ class ElevationPainter extends CustomPainter {
       );
     }
     if (wallW != null || wallH != null) {
-      final shade = Paint()..color = ink.withValues(alpha: 0.08);
       final wallTop = oy + sceneTop * s;
       final wallLeft = ox + sceneLeft * s;
       final wallRight = ox + sceneRight * s;
       final floorY = oy + ringH * s;
-      if (wallW != null) {
-        canvas
-          ..drawRect(
+      final zones = <(Rect, String)>[
+        if (wallW != null && i.wallMarginLeft > 0)
+          (
             Rect.fromLTRB(
               wallLeft,
               wallTop,
               wallLeft + i.wallMarginLeft * s,
               floorY,
             ),
-            shade,
-          )
-          ..drawRect(
+            _fmt.format(i.wallMarginLeft),
+          ),
+        if (wallW != null && i.wallMarginRight > 0)
+          (
             Rect.fromLTRB(
               wallRight - i.wallMarginRight * s,
               wallTop,
               wallRight,
               floorY,
             ),
-            shade,
-          );
-      }
-      if (wallH != null) {
-        canvas.drawRect(
-          Rect.fromLTRB(
-            wallLeft,
-            wallTop,
-            wallRight,
-            wallTop + i.wallMarginTop * s,
+            _fmt.format(i.wallMarginRight),
           ),
-          shade,
+        if (wallH != null && i.wallMarginTop > 0)
+          (
+            Rect.fromLTRB(
+              wallLeft,
+              wallTop,
+              wallRight,
+              wallTop + i.wallMarginTop * s,
+            ),
+            _fmt.format(i.wallMarginTop),
+          ),
+      ];
+      for (final z in zones) {
+        canvas.drawRect(
+          z.$1,
+          Paint()..color = AppColors.danger.withValues(alpha: 0.12),
         );
+        _hatch(canvas, z.$1, AppColors.danger.withValues(alpha: 0.55));
+        if (z.$1.width > 34 && z.$1.height > 16) {
+          _text(
+            canvas,
+            'Keep clear ${z.$2}',
+            z.$1.center,
+            size: AppType.drawingBay,
+            color: ink,
+            maxW: z.$1.width - 4,
+            plate: true,
+          );
+        }
       }
     }
     canvas.drawLine(
@@ -115,9 +132,60 @@ class ElevationPainter extends CustomPainter {
     );
 
     final geo = plan.geometry;
-    canvas
-      ..drawRect(rect(geo.openingBox), Paint()..color = AppColors.gap)
-      ..drawRect(rect(geo.windowBox), Paint()..color = AppColors.window);
+    final opening = rect(geo.openingBox);
+    canvas.drawRect(opening, Paint()..color = AppColors.gap);
+    _hatch(canvas, opening, AppColors.windowInk.withValues(alpha: 0.35));
+    canvas.drawRect(rect(geo.windowBox), Paint()..color = AppColors.window);
+    final gaps = <(double, Rect)>[
+      (
+        i.gapTop,
+        Rect.fromLTRB(
+          opening.left,
+          opening.top,
+          opening.right,
+          rect(geo.windowBox).top,
+        ),
+      ),
+      (
+        i.gapBottom,
+        Rect.fromLTRB(
+          opening.left,
+          rect(geo.windowBox).bottom,
+          opening.right,
+          opening.bottom,
+        ),
+      ),
+      (
+        i.gapLeft,
+        Rect.fromLTRB(
+          opening.left,
+          opening.top,
+          rect(geo.windowBox).left,
+          opening.bottom,
+        ),
+      ),
+      (
+        i.gapRight,
+        Rect.fromLTRB(
+          rect(geo.windowBox).right,
+          opening.top,
+          opening.right,
+          opening.bottom,
+        ),
+      ),
+    ];
+    for (final g in gaps) {
+      if (g.$1 > 0 && g.$2.width > 26 && g.$2.height > 12) {
+        _text(
+          canvas,
+          _fmt.plain(g.$1),
+          g.$2.center,
+          size: AppType.drawingBay,
+          color: AppColors.windowInk,
+          plate: true,
+        );
+      }
+    }
 
     final wood = Paint()..color = AppColors.wood;
     final edge = Paint()
@@ -193,6 +261,24 @@ class ElevationPainter extends CustomPainter {
       ring.right + Sizes.dimOffset,
       'Window ${_fmt.format(i.windowH)}',
     );
+  }
+
+  void _hatch(Canvas c, Rect r, Color color) {
+    const gap = 8.0;
+    final p = Paint()
+      ..color = color
+      ..strokeWidth = 1;
+    c
+      ..save()
+      ..clipRect(r);
+    for (var d = -r.height; d < r.width; d += gap) {
+      c.drawLine(
+        Offset(r.left + d, r.bottom),
+        Offset(r.left + d + r.height, r.top),
+        p,
+      );
+    }
+    c.restore();
   }
 
   void _hDim(Canvas c, double x1, double x2, double y, String label) {

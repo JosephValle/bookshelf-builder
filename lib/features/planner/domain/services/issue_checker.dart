@@ -122,7 +122,8 @@ class IssueChecker {
           Severity.error,
           'Ring height ${f(dims.ringH)} exceeds the ${f(available)} available under the top margin.',
         );
-      } else if (available - dims.ringH < Limits.ceilingClearanceMin) {
+      } else if (!inputs.fillWall &&
+          available - dims.ringH < Limits.ceilingClearanceMin) {
         add(
           Severity.warning,
           'Clearance under the top margin is ${f(available - dims.ringH)}, under ${f(Limits.ceilingClearanceMin)}.',

@@ -114,7 +114,7 @@ void main() {
       );
       expect(field.enabled, isTrue);
       expect(
-        find.textContaining('Column widths come from the wall'),
+        find.textContaining('Sizes come from the wall'),
         findsNothing,
       );
     });
@@ -129,7 +129,7 @@ void main() {
         expect(left.enabled, isFalse);
         expect(left.controller!.text, '36');
         expect(
-          find.textContaining('Column widths come from the wall'),
+          find.textContaining('Sizes come from the wall'),
           findsOneWidget,
         );
       },

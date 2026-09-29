@@ -97,7 +97,7 @@ void main() {
     });
 
     test('a ring taller than the wall is an error', () {
-      final p = planFor(const Inputs(wallH: 70));
+      final p = planFor(const Inputs(wallH: 70, fillWall: false));
       expect(
         has(p.issues, Severity.error, 'available under the top margin'),
         isTrue,
@@ -105,7 +105,7 @@ void main() {
     });
 
     test('ceiling clearance under a quarter inch warns', () {
-      final p = planFor(const Inputs(wallH: 76.1));
+      final p = planFor(const Inputs(wallH: 76.1, fillWall: false));
       expect(
         has(p.issues, Severity.warning, 'Clearance under the top margin'),
         isTrue,
@@ -113,7 +113,7 @@ void main() {
     });
 
     test('ample ceiling clearance is fine', () {
-      expect(planFor(const Inputs(wallH: 96)).issues, isEmpty);
+      expect(planFor(const Inputs(wallH: 96, fillWall: false)).issues, isEmpty);
     });
 
     test('a window position that pushes the ring off the wall is an error', () {
@@ -154,7 +154,7 @@ void main() {
     });
 
     test('a top margin reduces the height available', () {
-      final p = planFor(const Inputs(wallH: 80, wallMarginTop: 6));
+      final p = planFor(const Inputs(wallH: 80, wallMarginTop: 6, fillWall: false));
       expect(
         has(p.issues, Severity.error, 'available under the top margin'),
         isTrue,
@@ -162,12 +162,12 @@ void main() {
     });
 
     test('a top margin that leaves room is fine', () {
-      final p = planFor(const Inputs(wallH: 96, wallMarginTop: 6));
+      final p = planFor(const Inputs(wallH: 96, wallMarginTop: 6, fillWall: false));
       expect(p.issues, isEmpty);
     });
 
     test('a tight top margin warns about clearance', () {
-      final p = planFor(const Inputs(wallH: 82, wallMarginTop: 6));
+      final p = planFor(const Inputs(wallH: 82, wallMarginTop: 6, fillWall: false));
       expect(
         has(p.issues, Severity.warning, 'Clearance under the top margin'),
         isTrue,

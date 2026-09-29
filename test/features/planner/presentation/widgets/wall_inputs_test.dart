@@ -138,7 +138,7 @@ void main() {
       await tester.pump();
       expect(current.wallMarginLeft, 6);
       expect(current.wallMarginRight, 10);
-      expect(find.text('Left column 32", right column 34"'), findsOneWidget);
+      expect(find.text('Left column 28", right column 28"'), findsOneWidget);
     });
 
     testWidgets('a margin of zero is accepted', (tester) async {
@@ -154,7 +154,10 @@ void main() {
   group('wall height', () {
     testWidgets('vertical controls appear with a wall height', (tester) async {
       await pump(tester, start: const Inputs(wallH: 96));
-      expect(find.widgetWithText(TextField, 'Window from floor'), findsOneWidget);
+      expect(
+        find.widgetWithText(TextField, 'Window from floor'),
+        findsOneWidget,
+      );
       expect(find.widgetWithText(TextField, 'Top margin'), findsOneWidget);
       expect(find.widgetWithText(TextField, 'Left margin'), findsNothing);
       expect(
@@ -195,9 +198,14 @@ void main() {
 
     testWidgets('both axes show both summaries', (tester) async {
       await pump(tester, start: const Inputs(wallW: 120, wallH: 96));
-      expect(find.textContaining('Left column 36", right column 36"'),
-          findsOneWidget);
-      expect(find.textContaining('Top bar 24", bottom bar 24"'), findsOneWidget);
+      expect(
+        find.textContaining('Left column 36", right column 36"'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Top bar 24", bottom bar 24"'),
+        findsOneWidget,
+      );
     });
   });
 

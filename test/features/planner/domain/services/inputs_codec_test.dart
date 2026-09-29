@@ -80,10 +80,7 @@ void main() {
     });
 
     test('non-finite numbers fall back to defaults', () {
-      final i = codec.decode({
-        'windowW': double.infinity,
-        'wallW': double.nan,
-      });
+      final i = codec.decode({'windowW': double.infinity, 'wallW': double.nan});
       expect(i.windowW, 48);
       expect(i.wallW, isNull);
     });
