@@ -17,7 +17,7 @@ class ColumnPlanner {
   /// Plans a column of outer width [colW].
   ///
   /// Shelf count is `max(0, ceil((sideH - target) / (target + t)))`. Dividers
-  /// are added only when the clear width exceeds the active span limit.
+  /// are added only when the clear width exceeds the allowed shelf width.
   ColumnPlan plan(double colW, Inputs i, Dimensions dims) {
     const t = Limits.t;
     final clearW = colW - 2 * t;
@@ -26,8 +26,8 @@ class ColumnPlanner {
       ((dims.sideH - i.targetClearH) / (i.targetClearH + t)).ceil(),
     );
     final clearH = (dims.sideH - n * t) / (n + 1);
-    final d = clearW > dims.spanLimit
-        ? dividers.count(clearW, dims.spanLimit)
+    final d = clearW > dims.shelfWidth
+        ? dividers.count(clearW, dims.shelfWidth)
         : 0;
     return ColumnPlan(
       colW: colW,

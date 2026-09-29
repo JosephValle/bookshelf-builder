@@ -32,6 +32,7 @@ class PlannerScreen extends StatelessWidget {
             final cubit = context.read<PlannerCubit>();
             final inputs = InputsPanel(
               inputs: state.inputs,
+              plan: state.plan,
               onChanged: cubit.setInputs,
               onReset: cubit.reset,
             );

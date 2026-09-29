@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:bookshelf_builder/features/planner/domain/models/dimensions.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/inputs.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/limits.dart';
@@ -43,27 +45,31 @@ class PlanEngine {
 
   /// Computes the plan for [inputs].
   ///
-  /// The top bar always uses the box beam spacing. The bottom bar uses the
-  /// shelf span limit when it rests on the floor, and the box beam spacing
-  /// otherwise.
-  Plan compute(Inputs inputs) {
+  /// Column widths are resolved first (see [Inputs.resolved]) so a wall width
+  /// grows the columns. Bar dividers are spaced at the preferred shelf width,
+  /// capped by the structural limit: the box beam spacing for the top bar (and
+  /// for the bottom bar off the floor), the shelf span limit for a bottom bar
+  /// resting on the floor.
+  Plan compute(Inputs raw) {
+    final inputs = raw.resolved;
     final dims = Dimensions.from(inputs);
     final leftCol = columns.plan(inputs.left, inputs, dims);
     final rightCol = columns.plan(inputs.right, inputs, dims);
-    final bottomSpan = inputs.onFloor
+    const topLimit = Limits.boxBeamMaxWebSpacing;
+    final bottomLimit = inputs.onFloor
         ? dims.spanLimit
         : Limits.boxBeamMaxWebSpacing;
     final topBar = bars.plan(
       windowW: inputs.windowW,
       barH: inputs.top,
       kick: 0,
-      span: Limits.boxBeamMaxWebSpacing,
+      span: math.min(dims.shelfWidth, topLimit),
     );
     final bottomBar = bars.plan(
       windowW: inputs.windowW,
       barH: inputs.bottom,
       kick: dims.kick,
-      span: bottomSpan,
+      span: math.min(dims.shelfWidth, bottomLimit),
     );
     final parts = partsBuilder.build(
       inputs: inputs,
@@ -80,8 +86,8 @@ class PlanEngine {
       rightCol: rightCol,
       topBar: topBar,
       bottomBar: bottomBar,
-      topBarSpanLimit: Limits.boxBeamMaxWebSpacing,
-      bottomBarSpanLimit: bottomSpan,
+      topBarSpanLimit: topLimit,
+      bottomBarSpanLimit: bottomLimit,
     );
     return Plan(
       inputs: inputs,

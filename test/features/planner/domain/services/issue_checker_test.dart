@@ -81,47 +81,124 @@ void main() {
       expect(has(p.issues, Severity.warning, 'spliced'), isTrue);
     });
 
-    test('a ring wider than the wall is an error', () {
+    test('a ring wider than the wall is an error without fill', () {
+      final p = planFor(const Inputs(wallW: 70, fillWall: false));
+      expect(has(p.issues, Severity.error, 'available on the wall'), isTrue);
+    });
+
+    test('filling the wall never exceeds the available width', () {
       final p = planFor(const Inputs(wallW: 70));
-      expect(has(p.issues, Severity.error, 'wall width'), isTrue);
+      expect(has(p.issues, Severity.error, 'available on the wall'), isFalse);
+    });
+
+    test('a wall narrower than the window is an error', () {
+      final p = planFor(const Inputs(wallW: 40));
+      expect(has(p.issues, Severity.error, 'narrower than'), isTrue);
     });
 
     test('a ring taller than the wall is an error', () {
       final p = planFor(const Inputs(wallH: 70));
-      expect(has(p.issues, Severity.error, 'wall height'), isTrue);
+      expect(
+        has(p.issues, Severity.error, 'available under the top margin'),
+        isTrue,
+      );
     });
 
     test('ceiling clearance under a quarter inch warns', () {
       final p = planFor(const Inputs(wallH: 76.1));
-      expect(has(p.issues, Severity.warning, 'Ceiling clearance'), isTrue);
+      expect(
+        has(p.issues, Severity.warning, 'Clearance under the top margin'),
+        isTrue,
+      );
     });
 
     test('ample ceiling clearance is fine', () {
       expect(planFor(const Inputs(wallH: 96)).issues, isEmpty);
     });
 
-    test('an offset that pushes the ring off the wall is an error', () {
-      final p = planFor(const Inputs(wallW: 100, ringOffsetFromLeft: 30));
-      expect(has(p.issues, Severity.error, 'does not fit'), isTrue);
+    test('a window position that pushes the ring off the wall is an error', () {
+      final p = planFor(
+        const Inputs(wallW: 100, fillWall: false, windowFromWallLeft: 60),
+      );
+      expect(has(p.issues, Severity.error, 'runs into a wall margin'), isTrue);
     });
 
-    test('a negative offset is an error', () {
-      final p = planFor(const Inputs(wallW: 100, ringOffsetFromLeft: -1));
-      expect(has(p.issues, Severity.error, 'does not fit'), isTrue);
+    test('a window too close to the left edge is an error', () {
+      final p = planFor(
+        const Inputs(wallW: 100, fillWall: false, windowFromWallLeft: 5),
+      );
+      expect(has(p.issues, Severity.error, 'runs into a wall margin'), isTrue);
     });
 
-    test('centering the window can push an uneven ring off the wall', () {
-      final p = planFor(const Inputs(wallW: 80, left: 30, right: 6));
-      expect(has(p.issues, Severity.error, 'does not fit'), isTrue);
+    test('an uneven ring wider than the wall is an error', () {
+      final p = planFor(
+        const Inputs(wallW: 80, left: 30, right: 6, fillWall: false),
+      );
+      expect(has(p.issues, Severity.error, 'available on the wall'), isTrue);
     });
 
-    test('a centered window on a wide wall is fine', () {
-      expect(planFor(const Inputs(wallW: 120)).issues, isEmpty);
+    test('a centered window filling a wide wall is fine', () {
+      expect(planFor(const Inputs(wallW: 90)).issues, isEmpty);
     });
 
-    test('a valid offset is fine', () {
-      final p = planFor(const Inputs(wallW: 100, ringOffsetFromLeft: 12));
+    test('a valid window position without fill is fine', () {
+      final p = planFor(
+        const Inputs(wallW: 100, fillWall: false, windowFromWallLeft: 20),
+      );
       expect(p.issues, isEmpty);
+    });
+
+    test('filling the wall with a too-small column warns', () {
+      final p = planFor(const Inputs(wallW: 100, windowFromWallLeft: 4));
+      expect(has(p.issues, Severity.warning, 'minOuterSection'), isTrue);
+    });
+
+    test('a top margin reduces the height available', () {
+      final p = planFor(const Inputs(wallH: 80, wallMarginTop: 6));
+      expect(
+        has(p.issues, Severity.error, 'available under the top margin'),
+        isTrue,
+      );
+    });
+
+    test('a top margin that leaves room is fine', () {
+      final p = planFor(const Inputs(wallH: 96, wallMarginTop: 6));
+      expect(p.issues, isEmpty);
+    });
+
+    test('a tight top margin warns about clearance', () {
+      final p = planFor(const Inputs(wallH: 82, wallMarginTop: 6));
+      expect(
+        has(p.issues, Severity.warning, 'Clearance under the top margin'),
+        isTrue,
+      );
+    });
+
+    test('side margins shrink the available width', () {
+      final p = planFor(
+        const Inputs(wallW: 90, wallMarginLeft: 10, wallMarginRight: 10),
+      );
+      expect(p.errors, isEmpty);
+      expect(p.ringW, 70);
+    });
+
+    test('margins that leave less than the window are an error', () {
+      final p = planFor(
+        const Inputs(wallW: 90, wallMarginLeft: 30, wallMarginRight: 30),
+      );
+      expect(has(p.issues, Severity.error, 'between the margins'), isTrue);
+    });
+
+    test('an unfilled ring cannot run into a margin', () {
+      final p = planFor(
+        const Inputs(
+          wallW: 100,
+          fillWall: false,
+          wallMarginLeft: 20,
+          windowFromWallLeft: 30,
+        ),
+      );
+      expect(has(p.issues, Severity.error, 'runs into a wall margin'), isTrue);
     });
 
     test('not on the floor adds a support note', () {

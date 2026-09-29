@@ -21,20 +21,24 @@ class SheetEstimator {
   ///
   /// 3/4" parts are ripped into strips of panel depth, packed first-fit
   /// decreasing, and grouped into sheets. Parts longer than a sheet are left
-  /// out (the issue checker warns about them). The toe kick goes into leftover
-  /// sheet width when it fits, otherwise it costs one more strip. The 1/4"
-  /// back is estimated from total area with an 85 percent yield.
+  /// out (the issue checker warns about them). Narrow strips (toe kick and
+  /// anchor cleats) go into leftover sheet width when they all fit, otherwise
+  /// they cost extra strips. The 1/4" back is estimated from total area with
+  /// an 85 percent yield.
   SheetPlan estimate({
     required List<Part> parts,
     required Dimensions dims,
     required Inputs inputs,
   }) {
     final lengths = <double>[];
+    var narrowWidth = 0.0;
     var backArea = 0.0;
     for (final p in parts) {
-      if (p.material == PartMaterial.ply34 &&
-          p.name != PartsBuilder.toeKickName) {
-        if (p.length <= Limits.sheetL) {
+      if (p.material == PartMaterial.ply34) {
+        if (p.length > Limits.sheetL) continue;
+        if (PartsBuilder.isNarrowStrip(p.name)) {
+          narrowWidth += (p.width + Limits.kerf) * p.qty;
+        } else {
           for (var q = 0; q < p.qty; q++) {
             lengths.add(p.length);
           }
@@ -44,17 +48,18 @@ class SheetEstimator {
       }
     }
 
-    final perSheet =
-        ((Limits.sheetW + Limits.kerf) / (dims.depthPanel + Limits.kerf))
-            .floor()
-            .clamp(1, 1000);
+    final stripWidth = dims.depthPanel + Limits.kerf;
+    final perSheet = ((Limits.sheetW + Limits.kerf) / stripWidth).floor().clamp(
+      1,
+      1000,
+    );
     var needed = packer.pack(lengths);
-    if (inputs.onFloor && dims.ringW <= Limits.sheetL && needed > 0) {
+    if (narrowWidth > 0 && needed > 0) {
       final sheets = max(1, (needed / perSheet).ceil());
       final inLast = needed - (sheets - 1) * perSheet;
-      final leftover = Limits.sheetW - inLast * (dims.depthPanel + Limits.kerf);
-      final fits = inLast < perSheet && leftover >= inputs.toeKick;
-      if (!fits) needed += 1;
+      final leftover = Limits.sheetW - inLast * stripWidth;
+      final fits = inLast < perSheet && leftover >= narrowWidth;
+      if (!fits) needed += (narrowWidth / stripWidth).ceil();
     }
     final sheets34 = needed == 0 ? 0 : (needed / perSheet).ceil();
     final backSheets =

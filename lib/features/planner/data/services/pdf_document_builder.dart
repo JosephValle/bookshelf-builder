@@ -5,6 +5,7 @@ import 'package:bookshelf_builder/features/planner/domain/models/box.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/planner_notes.dart';
+import 'package:bookshelf_builder/features/planner/domain/services/assembly_guide_builder.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/inches_formatter.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -13,10 +14,16 @@ import 'package:pdf/widgets.dart' as pw;
 /// warnings, wall note and disclaimer.
 class PdfDocumentBuilder {
   /// Creates a builder.
-  const PdfDocumentBuilder({this.formatter = const InchesFormatter()});
+  const PdfDocumentBuilder({
+    this.formatter = const InchesFormatter(),
+    this.guide = const AssemblyGuideBuilder(),
+  });
 
   /// Inch formatting used throughout the document.
   final InchesFormatter formatter;
+
+  /// Writes the assembly guide section.
+  final AssemblyGuideBuilder guide;
 
   static const double _drawingMaxW = 460;
   static const double _drawingMaxH = 400;
@@ -87,6 +94,10 @@ class PdfDocumentBuilder {
           pw.SizedBox(height: 6),
           pw.Text(PlannerNotes.store),
           pw.SizedBox(height: 16),
+          pw.Text('Assembly guide', style: heading),
+          pw.SizedBox(height: 6),
+          ..._assembly(plan),
+          pw.SizedBox(height: 16),
           pw.Text('Warnings', style: heading),
           pw.SizedBox(height: 6),
           if (plan.issues.isEmpty) pw.Text('None'),
@@ -104,6 +115,29 @@ class PdfDocumentBuilder {
       ),
     );
     return doc.save();
+  }
+
+  List<pw.Widget> _assembly(Plan plan) {
+    final steps = guide.build(plan);
+    return [
+      for (var n = 0; n < steps.length; n++)
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(bottom: 8),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                '${n + 1}. ${steps[n].title}',
+                style: const pw.TextStyle(
+                  fontSize: 12,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              for (final d in steps[n].details) pw.Bullet(text: d),
+            ],
+          ),
+        ),
+    ];
   }
 
   pw.Widget _drawing(Plan plan) {

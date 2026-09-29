@@ -16,5 +16,8 @@ class PlannerNotes {
   static const String wall =
       'Attach with a continuous 3/4" plywood French cleat screwed into studs '
       '(studs every 16 in on center), one at the top and one at mid-height on '
-      'each column, and anchor the unit against tipping.';
+      'each column, and anchor the unit against tipping. Drive the anchors '
+      'through the solid plywood anchor cleat inside the bar over the window '
+      '(glued to the bar skins and webs), never through the 1/4" back panel '
+      'alone.';
 }

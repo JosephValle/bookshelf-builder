@@ -18,6 +18,8 @@ class DimField extends StatefulWidget {
     this.max = 1,
     this.slider = true,
     this.optional = false,
+    this.enabled = true,
+    this.allowZero = false,
     super.key,
   });
 
@@ -41,6 +43,12 @@ class DimField extends StatefulWidget {
 
   /// Whether the field may be left empty.
   final bool optional;
+
+  /// Whether the field and slider can be edited.
+  final bool enabled;
+
+  /// Whether zero is a valid value (otherwise values must be above zero).
+  final bool allowZero;
 
   @override
   State<DimField> createState() => _DimFieldState();
@@ -85,7 +93,9 @@ class _DimFieldState extends State<DimField> {
       return;
     }
     final v = _parser.parse(text);
-    if (v != null && v > 0) widget.onChanged(v);
+    if (v != null && (v > 0 || (widget.allowZero && v == 0))) {
+      widget.onChanged(v);
+    }
   }
 
   void _slid(double v) {
@@ -97,27 +107,25 @@ class _DimFieldState extends State<DimField> {
   @override
   Widget build(BuildContext context) {
     final v = widget.value;
-    final field = SizedBox(
-      width: Sizes.fieldWidth,
-      child: TextField(
-        controller: _controller,
-        focusNode: _focus,
-        onChanged: _typed,
-        keyboardType: TextInputType.text,
-        decoration: InputDecoration(labelText: widget.label, suffixText: 'in'),
-      ),
+    final input = TextField(
+      controller: _controller,
+      focusNode: _focus,
+      enabled: widget.enabled,
+      onChanged: _typed,
+      keyboardType: TextInputType.text,
+      decoration: InputDecoration(labelText: widget.label, suffixText: 'in'),
     );
     if (!widget.slider) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: Space.xs),
-        child: field,
+        child: input,
       );
     }
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: Space.xs),
       child: Row(
         children: [
-          field,
+          SizedBox(width: Sizes.fieldWidth, child: input),
           Expanded(
             child: Slider(
               value: (v ?? widget.min).clamp(widget.min, widget.max),
@@ -125,7 +133,7 @@ class _DimFieldState extends State<DimField> {
               max: widget.max,
               label: v == null ? null : _formatter.format(v),
               semanticFormatterCallback: _formatter.format,
-              onChanged: _slid,
+              onChanged: widget.enabled ? _slid : null,
             ),
           ),
         ],

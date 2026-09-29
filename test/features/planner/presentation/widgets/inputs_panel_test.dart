@@ -3,6 +3,8 @@ import 'package:bookshelf_builder/features/planner/presentation/widgets/inputs_p
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/plan_helpers.dart';
+
 void main() {
   late Inputs current;
   var resets = 0;
@@ -23,6 +25,7 @@ void main() {
             builder: (context, setState) => SingleChildScrollView(
               child: InputsPanel(
                 inputs: current,
+                plan: planFor(current),
                 onChanged: (i) => setState(() => current = i),
                 onReset: () => resets++,
               ),
@@ -50,6 +53,7 @@ void main() {
         'Bottom bar': (Inputs i) => i.bottom,
         'Total depth': (Inputs i) => i.depth,
         'Target height': (Inputs i) => i.targetClearH,
+        'Max shelf width': (Inputs i) => i.maxShelfWidth,
         'Toe kick': (Inputs i) => i.toeKick,
       };
       for (final e in fields.entries) {
@@ -101,6 +105,43 @@ void main() {
         '120',
       );
       expect(current.wallW, 120);
+    });
+
+    testWidgets('column fields are editable without a wall', (tester) async {
+      await pump(tester);
+      final field = tester.widget<TextField>(
+        find.widgetWithText(TextField, 'Left column'),
+      );
+      expect(field.enabled, isTrue);
+      expect(
+        find.textContaining('Column widths come from the wall'),
+        findsNothing,
+      );
+    });
+
+    testWidgets(
+      'a wall width locks the columns and shows the resolved widths',
+      (tester) async {
+        await pump(tester, start: const Inputs(wallW: 120));
+        final left = tester.widget<TextField>(
+          find.widgetWithText(TextField, 'Left column'),
+        );
+        expect(left.enabled, isFalse);
+        expect(left.controller!.text, '36');
+        expect(
+          find.textContaining('Column widths come from the wall'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('turning fill off unlocks the columns', (tester) async {
+      await pump(tester, start: const Inputs(wallW: 120, fillWall: false));
+      final left = tester.widget<TextField>(
+        find.widgetWithText(TextField, 'Left column'),
+      );
+      expect(left.enabled, isTrue);
+      expect(left.controller!.text, '14');
     });
 
     testWidgets('reset calls back', (tester) async {

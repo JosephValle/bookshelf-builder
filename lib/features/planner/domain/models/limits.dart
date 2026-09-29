@@ -53,6 +53,9 @@ class Limits {
   /// Ceiling clearance below which a warning is raised.
   static const double ceilingClearanceMin = 0.25;
 
+  /// Height of the solid plywood anchor cleat inside a bar.
+  static const double anchorCleatW = 3.5;
+
   /// Usable fraction of a 1/4" sheet after cutting the back panels.
   static const double backYield = 0.85;
 }

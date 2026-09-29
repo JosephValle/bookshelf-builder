@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:bookshelf_builder/features/planner/domain/models/inputs.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/clipboard_writer.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/cut_list_csv_builder.dart';
+import 'package:bookshelf_builder/features/planner/domain/services/inputs_store.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/pdf_exporter.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/plan_engine.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/summary_builder.dart';
@@ -14,6 +17,7 @@ class PlannerCubit extends Cubit<PlannerState> {
   PlannerCubit({
     required this._clipboard,
     required this._pdfExporter,
+    required this._store,
     PlanEngine engine = const PlanEngine(),
     this._csvBuilder = const CutListCsvBuilder(),
     this._summaryBuilder = const SummaryBuilder(),
@@ -23,22 +27,29 @@ class PlannerCubit extends Cubit<PlannerState> {
 
   final ClipboardWriter _clipboard;
   final PdfExporter _pdfExporter;
+  final InputsStore _store;
   final PlanEngine _engine;
   final CutListCsvBuilder _csvBuilder;
   final SummaryBuilder _summaryBuilder;
 
-  /// Replaces the inputs and recomputes the plan.
+  /// Replaces the inputs, recomputes the plan and saves the inputs so a
+  /// refresh restores them.
   void setInputs(Inputs inputs) {
     if (inputs == state.inputs) return;
     emit(PlannerState(inputs: inputs, plan: _engine.compute(inputs)));
+    unawaited(_store.save(inputs));
   }
 
   /// Applies [change] to the current inputs.
   void update(Inputs Function(Inputs current) change) =>
       setInputs(change(state.inputs));
 
-  /// Restores the default inputs.
-  void reset() => setInputs(const Inputs());
+  /// Restores the default inputs and forgets the saved copy.
+  void reset() {
+    const defaults = Inputs();
+    emit(PlannerState(inputs: defaults, plan: _engine.compute(defaults)));
+    unawaited(_store.clear());
+  }
 
   /// Copies the cut list as CSV.
   Future<void> copyCsv() => _run(

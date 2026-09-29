@@ -26,6 +26,14 @@ class InputRanges {
   static const double clearHMin = 6;
   static const double clearHMax = 20;
 
+  /// Preferred maximum shelf width slider range.
+  static const double shelfWidthMin = 12;
+  static const double shelfWidthMax = 36;
+
+  /// Wall margin slider range (distance the shelves stay clear of an edge).
+  static const double marginMin = 0;
+  static const double marginMax = 24;
+
   /// Depth presets: 1x8, 1x10 and 1x12 boards plus the back panel.
   static const List<double> depthPresets = [7.25, 9.25, 11.25];
 

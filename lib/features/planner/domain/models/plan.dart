@@ -74,6 +74,9 @@ class Plan extends Equatable {
   /// Active maximum clear shelf span.
   double get spanLimit => dimensions.spanLimit;
 
+  /// Widest shelf bay the planner allows.
+  double get shelfWidth => dimensions.shelfWidth;
+
   /// Horizontal position of the ring on the wall (see
   /// [Inputs.effectiveRingOffset]).
   double? get ringOffsetOnWall => inputs.effectiveRingOffset;

@@ -15,6 +15,7 @@ dependencies:
   flutter_bloc: ^9.1.1 # State management (cubits)
   pdf: ^3.13.1 # Builds the printable PDF document
   printing: ^5.15.1 # Opens the print and save dialog for the PDF
+  shared_preferences: ^2.5.5 # Saves the last inputs so a refresh keeps them
 
 dev_dependencies:
   bloc_test: ^10.0.0 # Cubit test helpers (blocTest)

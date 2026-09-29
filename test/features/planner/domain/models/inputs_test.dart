@@ -18,7 +18,12 @@ void main() {
       expect(i.edgeStiffener, isFalse);
       expect(i.wallW, isNull);
       expect(i.wallH, isNull);
-      expect(i.ringOffsetFromLeft, isNull);
+      expect(i.maxShelfWidth, 24);
+      expect(i.fillWall, isTrue);
+      expect(i.windowFromWallLeft, isNull);
+      expect(i.wallMarginTop, 0);
+      expect(i.wallMarginLeft, 0);
+      expect(i.wallMarginRight, 0);
     });
 
     test('copyWith replaces only the given fields', () {
@@ -37,21 +42,114 @@ void main() {
       expect(cleared.wallH, 96);
     });
 
-    test('ringOffsetFromLeft can be set and cleared', () {
-      final set = const Inputs().copyWith(ringOffsetFromLeft: () => 10);
-      expect(set.ringOffsetFromLeft, 10);
+    test('copyWith sets and clears the window position', () {
+      final set = const Inputs().copyWith(windowFromWallLeft: () => 10);
+      expect(set.windowFromWallLeft, 10);
       expect(
-        set.copyWith(ringOffsetFromLeft: () => null).ringOffsetFromLeft,
+        set.copyWith(windowFromWallLeft: () => null).windowFromWallLeft,
         isNull,
       );
     });
+
+    test('copyWith changes the shelf width and fill wall flag', () {
+      final i = const Inputs().copyWith(maxShelfWidth: 18, fillWall: false);
+      expect(i.maxShelfWidth, 18);
+      expect(i.fillWall, isFalse);
+    });
+
+    test('usableWallW is null without a wall width', () {
+      expect(const Inputs().usableWallW, isNull);
+    });
+
+    test('usableWallW subtracts the side margins', () {
+      const i = Inputs(wallW: 100, wallMarginLeft: 6, wallMarginRight: 10);
+      expect(i.usableWallW, 84);
+    });
+
+    test('usableWallW is never negative', () {
+      const i = Inputs(wallW: 10, wallMarginLeft: 8, wallMarginRight: 8);
+      expect(i.usableWallW, 0);
+    });
+
+    test('the window is centered between the margins', () {
+      const i = Inputs(wallW: 100, wallMarginLeft: 4, wallMarginRight: 20);
+      expect(i.windowLeftOnWall, 4 + (76 - 48) / 2);
+    });
+
+    test('the window cannot be moved into a margin', () {
+      const i = Inputs(
+        wallW: 100,
+        wallMarginLeft: 10,
+        wallMarginRight: 10,
+        windowFromWallLeft: 2,
+      );
+      expect(i.windowLeftOnWall, 10);
+      const j = Inputs(
+        wallW: 100,
+        wallMarginLeft: 10,
+        wallMarginRight: 10,
+        windowFromWallLeft: 90,
+      );
+      expect(j.windowLeftOnWall, 42);
+    });
+
+    test('resolved runs the ring from margin to margin', () {
+      const i = Inputs(wallW: 100, wallMarginLeft: 6, wallMarginRight: 10);
+      final r = i.resolved;
+      expect(r.left, 14);
+      expect(r.right, 22);
+      expect(6 + r.left + r.windowW + r.right, 90);
+    });
+
+    test('copyWith changes the wall margins', () {
+      final i = const Inputs().copyWith(
+        wallMarginTop: 3,
+        wallMarginLeft: 4,
+        wallMarginRight: 5,
+      );
+      expect(i.wallMarginTop, 3);
+      expect(i.wallMarginLeft, 4);
+      expect(i.wallMarginRight, 5);
+    });
+
+    test('windowLeftOnWall is null without a wall width', () {
+      expect(const Inputs().windowLeftOnWall, isNull);
+    });
+
+    test('windowLeftOnWall centers the window by default', () {
+      expect(const Inputs(wallW: 120).windowLeftOnWall, 36);
+    });
+
+    test('windowLeftOnWall honors the user position', () {
+      expect(
+        const Inputs(wallW: 120, windowFromWallLeft: 10).windowLeftOnWall,
+        10,
+      );
+    });
+
+    test('windowLeftOnWall is kept within the wall', () {
+      expect(
+        const Inputs(wallW: 100, windowFromWallLeft: 90).windowLeftOnWall,
+        52,
+      );
+      expect(
+        const Inputs(wallW: 100, windowFromWallLeft: 0).windowLeftOnWall,
+        0,
+      );
+    });
+
+    test(
+      'windowLeftOnWall is zero when the wall is narrower than the window',
+      () {
+        expect(const Inputs(wallW: 30).windowLeftOnWall, 0);
+      },
+    );
 
     test('effectiveRingOffset is null without a wall width', () {
       expect(const Inputs().effectiveRingOffset, isNull);
     });
 
-    test('effectiveRingOffset centers the window on the wall', () {
-      expect(const Inputs(wallW: 120).effectiveRingOffset, 22);
+    test('effectiveRingOffset places the window where asked', () {
       const uneven = Inputs(wallW: 120, left: 20, right: 10);
       expect(uneven.effectiveRingOffset, 16);
       expect(
@@ -60,11 +158,32 @@ void main() {
       );
     });
 
-    test('effectiveRingOffset prefers an explicit offset', () {
-      expect(
-        const Inputs(wallW: 120, ringOffsetFromLeft: 5).effectiveRingOffset,
-        5,
-      );
+    test('resolved is unchanged without a wall width', () {
+      expect(const Inputs().resolved, const Inputs());
+    });
+
+    test('resolved is unchanged when fillWall is off', () {
+      const i = Inputs(wallW: 120, fillWall: false);
+      expect(i.resolved, i);
+    });
+
+    test('resolved grows the columns to fill a centered wall', () {
+      final r = const Inputs(wallW: 120).resolved;
+      expect(r.left, 36);
+      expect(r.right, 36);
+      expect(r.left + r.windowW + r.right, 120);
+    });
+
+    test('resolved moves the window along the wall', () {
+      final r = const Inputs(wallW: 120, windowFromWallLeft: 10).resolved;
+      expect(r.left, 10);
+      expect(r.right, 62);
+    });
+
+    test('resolved never makes a negative column', () {
+      final r = const Inputs(wallW: 30).resolved;
+      expect(r.left, 0);
+      expect(r.right, 0);
     });
 
     test('has value equality', () {

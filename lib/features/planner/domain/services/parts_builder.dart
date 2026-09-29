@@ -1,7 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:bookshelf_builder/features/planner/domain/models/bar_plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/column_plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/dimensions.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/inputs.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/limits.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/part.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
 
@@ -12,6 +15,16 @@ class PartsBuilder {
 
   /// Name of the toe kick part (it is ripped from a different width).
   static const String toeKickName = 'Toe kick';
+
+  /// Name of the solid anchor cleat inside the top bar.
+  static const String topCleatName = 'Top bar anchor cleat';
+
+  /// Name of the solid anchor cleat inside the bottom bar (off the floor only).
+  static const String bottomCleatName = 'Bottom bar anchor cleat';
+
+  /// True for parts ripped to a narrow width instead of the panel depth.
+  static bool isNarrowStrip(String name) =>
+      name == toeKickName || name == topCleatName || name == bottomCleatName;
 
   /// Builds every part, including the optional toe kick and edge band.
   List<Part> build({
@@ -73,6 +86,17 @@ class PartsBuilder {
     );
     if (inputs.onFloor) {
       add(toeKickName, 1, dims.ringW, inputs.toeKick, p34);
+    }
+    final cleatW = math.min(Limits.anchorCleatW, topBar.clearH);
+    add(topCleatName, 1, inputs.windowW, cleatW, p34);
+    if (!inputs.onFloor) {
+      add(
+        bottomCleatName,
+        1,
+        inputs.windowW,
+        math.min(Limits.anchorCleatW, bottomBar.clearH),
+        p34,
+      );
     }
     const p14 = PartMaterial.ply14;
     add('Back panel, left column', 1, dims.ringH, inputs.left, p14);

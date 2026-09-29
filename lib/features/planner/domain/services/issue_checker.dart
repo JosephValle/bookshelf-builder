@@ -87,31 +87,40 @@ class IssueChecker {
 
     final wallW = inputs.wallW;
     final wallH = inputs.wallH;
-    if (wallW != null && dims.ringW > wallW + 1e-9) {
-      add(
-        Severity.error,
-        'Ring width ${f(dims.ringW)} exceeds wall width ${f(wallW)}.',
-      );
-    }
-    if (wallH != null) {
-      if (dims.ringH > wallH + 1e-9) {
+    final usable = inputs.usableWallW;
+    if (wallW != null && usable != null) {
+      if (usable < inputs.windowW - 1e-9) {
         add(
           Severity.error,
-          'Ring height ${f(dims.ringH)} exceeds wall height ${f(wallH)}.',
+          'Only ${f(usable)} of the wall is available between the margins, narrower than the ${f(inputs.windowW)} window.',
         );
-      } else if (wallH - dims.ringH < Limits.ceilingClearanceMin) {
+      } else if (dims.ringW > usable + 1e-9) {
         add(
-          Severity.warning,
-          'Ceiling clearance is ${f(wallH - dims.ringH)}, under ${f(Limits.ceilingClearanceMin)}.',
+          Severity.error,
+          'Ring width ${f(dims.ringW)} exceeds the ${f(usable)} available on the wall.',
         );
+      } else {
+        final offset = inputs.effectiveRingOffset!;
+        if (offset < inputs.wallMarginLeft - 1e-9 ||
+            offset + dims.ringW > wallW - inputs.wallMarginRight + 1e-9) {
+          add(
+            Severity.error,
+            'At this window position the ring runs into a wall margin or off the wall. Move the window or widen the columns.',
+          );
+        }
       }
     }
-    final offset = inputs.effectiveRingOffset;
-    if (wallW != null && offset != null) {
-      if (offset < 0 || offset + dims.ringW > wallW + 1e-9) {
+    if (wallH != null) {
+      final available = wallH - inputs.wallMarginTop;
+      if (dims.ringH > available + 1e-9) {
         add(
           Severity.error,
-          'Ring at ${f(offset)} from the left does not fit on the wall.',
+          'Ring height ${f(dims.ringH)} exceeds the ${f(available)} available under the top margin.',
+        );
+      } else if (available - dims.ringH < Limits.ceilingClearanceMin) {
+        add(
+          Severity.warning,
+          'Clearance under the top margin is ${f(available - dims.ringH)}, under ${f(Limits.ceilingClearanceMin)}.',
         );
       }
     }

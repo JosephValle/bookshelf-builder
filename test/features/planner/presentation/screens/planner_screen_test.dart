@@ -7,12 +7,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/fake_clipboard_writer.dart';
+import '../../support/fake_inputs_store.dart';
 import '../../support/fake_pdf_exporter.dart';
 
 void main() {
   late FakeClipboardWriter clipboard;
   late FakePdfExporter pdf;
   late PlannerCubit cubit;
+  late FakeInputsStore store;
 
   Future<void> pump(WidgetTester tester, Size size) async {
     tester.view.physicalSize = size;
@@ -20,7 +22,8 @@ void main() {
     addTearDown(tester.view.reset);
     clipboard = FakeClipboardWriter();
     pdf = FakePdfExporter();
-    cubit = PlannerCubit(clipboard: clipboard, pdfExporter: pdf);
+    store = FakeInputsStore();
+    cubit = PlannerCubit(clipboard: clipboard, pdfExporter: pdf, store: store);
     addTearDown(cubit.close);
     await tester.pumpWidget(
       MaterialApp(

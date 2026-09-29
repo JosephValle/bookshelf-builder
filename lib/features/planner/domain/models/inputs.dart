@@ -18,9 +18,14 @@ class Inputs extends Equatable {
     this.toeKick = 3.5,
     this.targetClearH = 11,
     this.edgeStiffener = false,
+    this.maxShelfWidth = 24,
+    this.fillWall = true,
     this.wallW,
     this.wallH,
-    this.ringOffsetFromLeft,
+    this.wallMarginTop = 0,
+    this.wallMarginLeft = 0,
+    this.wallMarginRight = 0,
+    this.windowFromWallLeft,
   });
 
   /// Clear window opening width.
@@ -56,25 +61,83 @@ class Inputs extends Equatable {
   /// Whether a solid front edge band is added to horizontal panels.
   final bool edgeStiffener;
 
-  /// Optional wall width for fit checks.
+  /// Preferred maximum clear shelf width. Dividers are added whenever a bay
+  /// would be wider, and it is capped by the structural span limits.
+  final double maxShelfWidth;
+
+  /// Whether the columns grow to fill the whole wall width when a wall width
+  /// is set. When false the ring keeps its column widths and sits on the wall.
+  final bool fillWall;
+
+  /// Optional wall width.
   final double? wallW;
 
   /// Optional wall height (floor to ceiling) for fit checks.
   final double? wallH;
 
-  /// Optional horizontal position of the ring on the wall.
-  final double? ringOffsetFromLeft;
+  /// Distance from the ceiling that the shelves must stay clear of (crown
+  /// molding, a soffit). Used with [wallH].
+  final double wallMarginTop;
+
+  /// Distance from the wall's left edge that the shelves must stay clear of
+  /// (a door, trim, an adjacent cabinet). Used with [wallW].
+  final double wallMarginLeft;
+
+  /// Distance from the wall's right edge that the shelves must stay clear of.
+  /// Used with [wallW]. The bottom of the wall is the floor, so it has no
+  /// margin.
+  final double wallMarginRight;
+
+  /// Optional distance from the wall's left edge to the window's left edge.
+  /// Centered on the wall when unset.
+  final double? windowFromWallLeft;
+
+  /// Width of the wall between the left and right margins, or null when no
+  /// wall width is set. Never negative.
+  double? get usableWallW {
+    final w = wallW;
+    if (w == null) return null;
+    return (w - wallMarginLeft - wallMarginRight).clamp(0.0, double.infinity);
+  }
+
+  /// Distance from the wall's left edge to the window's left edge, or null
+  /// when no wall width is set.
+  ///
+  /// Centered between the margins unless [windowFromWallLeft] is given, and
+  /// always kept between the margins.
+  double? get windowLeftOnWall {
+    final usable = usableWallW;
+    if (usable == null) return null;
+    final room = (usable - windowW).clamp(0.0, double.infinity);
+    final p = (windowFromWallLeft ?? wallMarginLeft + room / 2).clamp(
+      wallMarginLeft,
+      wallMarginLeft + room,
+    );
+    return p;
+  }
 
   /// Horizontal position of the ring's left edge on the wall, or null when no
   /// wall width is set.
-  ///
-  /// Uses [ringOffsetFromLeft] when given. Otherwise the window is centered on
-  /// the wall, which differs from centering the whole ring when the two
-  /// columns are different widths.
   double? get effectiveRingOffset {
+    final p = windowLeftOnWall;
+    return p == null ? null : p - left;
+  }
+
+  /// These inputs with the column widths resolved.
+  ///
+  /// When a wall width is set and [fillWall] is on, the columns grow so the
+  /// ring runs from the left margin to the right margin, with the window at
+  /// [windowLeftOnWall]. Otherwise the inputs are returned unchanged.
+  Inputs get resolved {
     final w = wallW;
-    if (w == null) return null;
-    return ringOffsetFromLeft ?? w / 2 - left - windowW / 2;
+    final p = windowLeftOnWall;
+    if (w == null || p == null || !fillWall) return this;
+    final leftW = (p - wallMarginLeft).clamp(0.0, double.infinity);
+    final rightW = (w - wallMarginRight - p - windowW).clamp(
+      0.0,
+      double.infinity,
+    );
+    return copyWith(left: leftW, right: rightW);
   }
 
   /// Returns a copy with the given fields replaced.
@@ -93,9 +156,14 @@ class Inputs extends Equatable {
     double? toeKick,
     double? targetClearH,
     bool? edgeStiffener,
+    double? maxShelfWidth,
+    bool? fillWall,
     double? Function()? wallW,
     double? Function()? wallH,
-    double? Function()? ringOffsetFromLeft,
+    double? wallMarginTop,
+    double? wallMarginLeft,
+    double? wallMarginRight,
+    double? Function()? windowFromWallLeft,
   }) {
     return Inputs(
       windowW: windowW ?? this.windowW,
@@ -109,11 +177,16 @@ class Inputs extends Equatable {
       toeKick: toeKick ?? this.toeKick,
       targetClearH: targetClearH ?? this.targetClearH,
       edgeStiffener: edgeStiffener ?? this.edgeStiffener,
+      maxShelfWidth: maxShelfWidth ?? this.maxShelfWidth,
+      fillWall: fillWall ?? this.fillWall,
       wallW: wallW != null ? wallW() : this.wallW,
       wallH: wallH != null ? wallH() : this.wallH,
-      ringOffsetFromLeft: ringOffsetFromLeft != null
-          ? ringOffsetFromLeft()
-          : this.ringOffsetFromLeft,
+      wallMarginTop: wallMarginTop ?? this.wallMarginTop,
+      wallMarginLeft: wallMarginLeft ?? this.wallMarginLeft,
+      wallMarginRight: wallMarginRight ?? this.wallMarginRight,
+      windowFromWallLeft: windowFromWallLeft != null
+          ? windowFromWallLeft()
+          : this.windowFromWallLeft,
     );
   }
 
@@ -130,8 +203,10 @@ class Inputs extends Equatable {
     toeKick,
     targetClearH,
     edgeStiffener,
+    maxShelfWidth,
+    fillWall,
     wallW,
     wallH,
-    ringOffsetFromLeft,
+    windowFromWallLeft,
   ];
 }

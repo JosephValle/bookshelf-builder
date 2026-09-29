@@ -12,6 +12,7 @@ class Dimensions extends Equatable {
     required this.kick,
     required this.sideH,
     required this.spanLimit,
+    required this.shelfWidth,
   });
 
   /// Derives dimensions from [i].
@@ -19,15 +20,17 @@ class Dimensions extends Equatable {
     final ringW = i.left + i.windowW + i.right;
     final ringH = i.top + i.windowH + i.bottom;
     final kick = i.onFloor ? i.toeKick : 0.0;
+    final span = i.edgeStiffener
+        ? Limits.maxShelfSpanStiffened
+        : Limits.maxShelfSpan;
     return Dimensions(
       ringW: ringW,
       ringH: ringH,
       depthPanel: i.depth - Limits.backT,
       kick: kick,
       sideH: ringH - kick - 2 * Limits.t,
-      spanLimit: i.edgeStiffener
-          ? Limits.maxShelfSpanStiffened
-          : Limits.maxShelfSpan,
+      spanLimit: span,
+      shelfWidth: i.maxShelfWidth < span ? i.maxShelfWidth : span,
     );
   }
 
@@ -46,9 +49,22 @@ class Dimensions extends Equatable {
   /// Length of the vertical column panels.
   final double sideH;
 
-  /// Active maximum clear shelf span.
+  /// Active structural maximum clear shelf span (30 in, or 36 in with the
+  /// edge band).
   final double spanLimit;
 
+  /// Widest shelf bay the planner will allow: the preferred maximum shelf
+  /// width, capped by [spanLimit].
+  final double shelfWidth;
+
   @override
-  List<Object?> get props => [ringW, ringH, depthPanel, kick, sideH, spanLimit];
+  List<Object?> get props => [
+    ringW,
+    ringH,
+    depthPanel,
+    kick,
+    sideH,
+    spanLimit,
+    shelfWidth,
+  ];
 }

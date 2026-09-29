@@ -1,6 +1,7 @@
 import 'package:bookshelf_builder/app/theme/space.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/input_ranges.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/inputs.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
 import 'package:bookshelf_builder/features/planner/presentation/widgets/dim_field.dart';
 import 'package:bookshelf_builder/features/planner/presentation/widgets/preset_chips.dart';
 import 'package:bookshelf_builder/features/planner/presentation/widgets/section_heading.dart';
@@ -13,6 +14,7 @@ class InputsPanel extends StatelessWidget {
   /// Creates the panel.
   const InputsPanel({
     required this.inputs,
+    required this.plan,
     required this.onChanged,
     required this.onReset,
     super.key,
@@ -20,6 +22,9 @@ class InputsPanel extends StatelessWidget {
 
   /// Current inputs.
   final Inputs inputs;
+
+  /// Plan computed from [inputs] (with columns resolved against the wall).
+  final Plan plan;
 
   /// Called with the edited inputs.
   final ValueChanged<Inputs> onChanged;
@@ -29,6 +34,7 @@ class InputsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fillsWall = inputs.wallW != null && inputs.fillWall;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -48,16 +54,26 @@ class InputsPanel extends StatelessWidget {
           onChanged: (v) => onChanged(inputs.copyWith(windowH: v)),
         ),
         const SectionHeading('Columns and bars'),
+        if (fillsWall)
+          const Padding(
+            padding: EdgeInsets.only(bottom: Space.sm),
+            child: Text(
+              'Column widths come from the wall. Turn off "Columns fill the '
+              'wall width" to set them yourself.',
+            ),
+          ),
         DimField(
           label: 'Left column',
-          value: inputs.left,
+          enabled: !fillsWall,
+          value: fillsWall ? plan.inputs.left : inputs.left,
           min: InputRanges.sectionMin,
           max: InputRanges.sectionMax,
           onChanged: (v) => onChanged(inputs.copyWith(left: v)),
         ),
         DimField(
           label: 'Right column',
-          value: inputs.right,
+          enabled: !fillsWall,
+          value: fillsWall ? plan.inputs.right : inputs.right,
           min: InputRanges.sectionMin,
           max: InputRanges.sectionMax,
           onChanged: (v) => onChanged(inputs.copyWith(right: v)),
@@ -97,6 +113,13 @@ class InputsPanel extends StatelessWidget {
           max: InputRanges.clearHMax,
           onChanged: (v) => onChanged(inputs.copyWith(targetClearH: v)),
         ),
+        DimField(
+          label: 'Max shelf width',
+          value: inputs.maxShelfWidth,
+          min: InputRanges.shelfWidthMin,
+          max: InputRanges.shelfWidthMax,
+          onChanged: (v) => onChanged(inputs.copyWith(maxShelfWidth: v)),
+        ),
         PresetChips(
           presets: InputRanges.clearHPresets,
           current: inputs.targetClearH,
@@ -125,10 +148,10 @@ class InputsPanel extends StatelessWidget {
         ),
         const SectionHeading('Wall (optional)'),
         const Text(
-          'Enter the wall size to see it in the drawing and check the fit. '
-          'The window is centered on the wall unless you set an offset.',
+          'Enter the wall size to see it in the drawing. The columns grow to fill '
+          'it, and you can slide the window along the wall.',
         ),
-        WallInputs(inputs: inputs, onChanged: onChanged),
+        WallInputs(inputs: inputs, plan: plan, onChanged: onChanged),
         const SizedBox(height: Space.md),
         Align(
           alignment: Alignment.centerLeft,

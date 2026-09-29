@@ -67,6 +67,45 @@ class ElevationPainter extends CustomPainter {
           ..strokeWidth = Strokes.wall,
       );
     }
+    if (wallW != null || wallH != null) {
+      final shade = Paint()..color = ink.withValues(alpha: 0.08);
+      final wallTop = oy + sceneTop * s;
+      final wallLeft = ox + sceneLeft * s;
+      final wallRight = ox + sceneRight * s;
+      final floorY = oy + ringH * s;
+      if (wallW != null) {
+        canvas
+          ..drawRect(
+            Rect.fromLTRB(
+              wallLeft,
+              wallTop,
+              wallLeft + i.wallMarginLeft * s,
+              floorY,
+            ),
+            shade,
+          )
+          ..drawRect(
+            Rect.fromLTRB(
+              wallRight - i.wallMarginRight * s,
+              wallTop,
+              wallRight,
+              floorY,
+            ),
+            shade,
+          );
+      }
+      if (wallH != null) {
+        canvas.drawRect(
+          Rect.fromLTRB(
+            wallLeft,
+            wallTop,
+            wallRight,
+            wallTop + i.wallMarginTop * s,
+          ),
+          shade,
+        );
+      }
+    }
     canvas.drawLine(
       Offset(ox + sceneLeft * s - 20, oy + ringH * s),
       Offset(ox + sceneRight * s + 20, oy + ringH * s),

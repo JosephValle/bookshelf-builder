@@ -24,7 +24,7 @@ void main() {
 
     test('draws with the wall outline set', () {
       paintOnce(
-        painter(const Inputs(wallW: 120, wallH: 96, ringOffsetFromLeft: 10)),
+        painter(const Inputs(wallW: 120, wallH: 96, windowFromWallLeft: 10)),
         const Size(800, 600),
       );
     });

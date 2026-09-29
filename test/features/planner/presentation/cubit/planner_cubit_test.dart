@@ -5,17 +5,21 @@ import 'package:bookshelf_builder/features/planner/presentation/cubit/planner_st
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/fake_clipboard_writer.dart';
+import '../../support/fake_inputs_store.dart';
 import '../../support/fake_pdf_exporter.dart';
 
 void main() {
   late FakeClipboardWriter clipboard;
   late FakePdfExporter pdf;
+  late FakeInputsStore store;
 
-  PlannerCubit build() => PlannerCubit(clipboard: clipboard, pdfExporter: pdf);
+  PlannerCubit build() =>
+      PlannerCubit(clipboard: clipboard, pdfExporter: pdf, store: store);
 
   setUp(() {
     clipboard = FakeClipboardWriter();
     pdf = FakePdfExporter();
+    store = FakeInputsStore();
   });
 
   group('initial state', () {
@@ -30,6 +34,7 @@ void main() {
       final cubit = PlannerCubit(
         clipboard: clipboard,
         pdfExporter: pdf,
+        store: store,
         initial: const Inputs(windowW: 40),
       );
       expect(cubit.state.plan.ringW, 68);
@@ -77,6 +82,60 @@ void main() {
       },
       verify: (c) => expect(c.state.inputs, const Inputs()),
     );
+  });
+
+  group('persistence', () {
+    test('every input change is saved', () {
+      final cubit = build();
+      cubit.update((i) => i.copyWith(left: 20));
+      cubit.update((i) => i.copyWith(right: 18));
+      expect(store.saves.length, 2);
+      expect(store.saved, cubit.state.inputs);
+    });
+
+    test('an unchanged input is not saved again', () {
+      final cubit = build();
+      cubit.setInputs(const Inputs());
+      expect(store.saves, isEmpty);
+    });
+
+    test('actions do not touch the saved inputs', () async {
+      final cubit = build();
+      await cubit.copyCsv();
+      expect(store.saves, isEmpty);
+      expect(store.clears, 0);
+    });
+
+    test('reset clears the saved copy and restores every default', () {
+      final cubit = build();
+      cubit.update(
+        (i) => i.copyWith(
+          left: 20,
+          maxShelfWidth: 16,
+          wallW: () => 120,
+          fillWall: false,
+        ),
+      );
+      cubit.reset();
+      expect(cubit.state.inputs, const Inputs());
+      expect(store.clears, 1);
+      expect(store.saved, isNull);
+    });
+
+    test('reset also works from the defaults', () {
+      final cubit = build();
+      cubit.reset();
+      expect(cubit.state.inputs, const Inputs());
+      expect(store.clears, 1);
+    });
+
+    test('resolved wall inputs drive the plan', () {
+      final cubit = build();
+      cubit.update((i) => i.copyWith(wallW: () => 120));
+      expect(cubit.state.plan.ringW, 120);
+      expect(cubit.state.inputs.left, 14);
+      expect(cubit.state.plan.inputs.left, 36);
+    });
   });
 
   group('actions', () {
