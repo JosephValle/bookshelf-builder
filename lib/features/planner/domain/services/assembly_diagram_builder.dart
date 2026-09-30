@@ -214,7 +214,7 @@ class AssemblyDiagramBuilder {
       ],
       pieces: [
         ..._use([(outer, 'outer column panel'), (cur, 'shelf')]),
-        ..._hw(_perJoint(plan), '1-1/4" screws'),
+        ..._hw(_perJoint(plan), Fasteners.boxScrew),
       ],
     );
   }
@@ -340,7 +340,7 @@ class AssemblyDiagramBuilder {
       dimensions: [_dim(24, 126, x(m), 126, _f(dist))],
       pieces: [
         ..._use([(cur, 'divider')]),
-        ..._hw(2 * _perJoint(plan), '1-1/4" screws'),
+        ..._hw(2 * _perJoint(plan), Fasteners.boxScrew),
       ],
     );
   }
@@ -390,7 +390,7 @@ class AssemblyDiagramBuilder {
       ],
       pieces: [
         ..._use([(inner, 'inner column panel')]),
-        ..._hw(c.shelves * _perJoint(plan), '1-1/4" screws'),
+        ..._hw(c.shelves * _perJoint(plan), Fasteners.boxScrew),
       ],
     );
   }
@@ -625,7 +625,7 @@ class AssemblyDiagramBuilder {
       ],
       pieces: [
         ..._use([(long, 'long panel'), (cur, 'divider')]),
-        ..._hw(n, '1-1/4" screws'),
+        ..._hw(n, Fasteners.boxScrew),
       ],
     );
   }
@@ -673,7 +673,7 @@ class AssemblyDiagramBuilder {
       ],
       pieces: [
         ..._use([(short, '${top ? 'head' : 'sill'} panel')]),
-        ..._hw(b.dividers * n, '1-1/4" screws'),
+        ..._hw(b.dividers * n, Fasteners.boxScrew),
       ],
     );
   }
@@ -737,7 +737,7 @@ class AssemblyDiagramBuilder {
         ..._use([(cleat, 'anchor cleat')]),
         ..._hw(
           math.max(1, (top ? plan.topBar : plan.bottomBar).dividers) * 2,
-          '1-1/4" screws',
+          Fasteners.boxScrew,
         ),
       ],
     );
@@ -774,7 +774,7 @@ class AssemblyDiagramBuilder {
       arrows: [_arrow(10 + bw * k + bw / 2, 30, 10 + bw * k + bw / 2, 44)],
       pieces: [
         ..._use([(cur, 'bar shelf')]),
-        ..._hw(2 * _perJoint(plan), '1-1/4" screws'),
+        ..._hw(2 * _perJoint(plan), Fasteners.boxScrew),
       ],
     );
   }
@@ -926,7 +926,7 @@ class AssemblyDiagramBuilder {
       ],
       pieces: [
         ..._use([(outer, 'outer column panel'), (inner, 'inner column panel')]),
-        ..._hw(2 * n, '1-1/4" screws'),
+        ..._hw(2 * n, Fasteners.boxScrew),
       ],
     );
   }
@@ -947,7 +947,7 @@ class AssemblyDiagramBuilder {
         (inner, 'inner column panel'),
         (short, '${top ? 'head' : 'sill'} panel'),
       ]),
-      ..._hw(n, '1-1/4" screws'),
+      ..._hw(n, Fasteners.boxScrew),
     ]);
   }
 
@@ -974,7 +974,7 @@ class AssemblyDiagramBuilder {
       arrows: [_arrow(150, 67, 128, 67)],
       pieces: [
         ..._use([(kick, 'toe kick')]),
-        ..._hw(counter.toeKickScrews(plan), '1-1/4" screws'),
+        ..._hw(counter.toeKickScrews(plan), Fasteners.boxScrew),
       ],
     );
   }
@@ -1104,7 +1104,10 @@ class AssemblyDiagramBuilder {
       ],
       pieces: [
         ..._use([(sub(current), 'unit cleat piece')]),
-        ..._hw(counter.pieceScrews(plan, current, wall: false), '2" screws'),
+        ..._hw(
+          counter.pieceScrews(plan, current, wall: false),
+          Fasteners.unitCleatScrew,
+        ),
       ],
     );
   }
@@ -1228,7 +1231,7 @@ class AssemblyDiagramBuilder {
           DiagramPiece(
             '',
             counter.pieceScrews(plan, piece, wall: true),
-            '3/16" x 2-1/4" concrete screws',
+            Fasteners.concreteScrew,
           ),
         ],
       );
@@ -1277,7 +1280,7 @@ class AssemblyDiagramBuilder {
         DiagramPiece(
           '',
           counter.pieceScrews(plan, piece, wall: true),
-          '3" screws',
+          Fasteners.studScrew,
         ),
       ],
     );
@@ -1368,7 +1371,14 @@ class AssemblyDiagramBuilder {
   /// Shelves are labelled just above their line at their left end, dividers at
   /// their top end just to the right, column panels just inside their column,
   /// and the four long panels inside the bars.
-  AssemblyDiagram elevation(Plan plan, {required String caption}) {
+  ///
+  /// Panels whose names are in [highlight] are drawn in the cleat tone, so a
+  /// goal picture can show which parts the current stage builds.
+  AssemblyDiagram elevation(
+    Plan plan, {
+    required String caption,
+    Set<String> highlight = const {},
+  }) {
     final ids = PieceIds(plan);
     final g = plan.geometry;
     final i = plan.inputs;
@@ -1417,7 +1427,17 @@ class AssemblyDiagramBuilder {
       final b = g.panels[k];
       final n = counts[name] = (counts[name] ?? -1) + 1;
       final id = ids.id(name, n);
-      shapes.add(DiagramShape.rect(b.x, b.y, b.w, b.h));
+      shapes.add(
+        DiagramShape.rect(
+          b.x,
+          b.y,
+          b.w,
+          b.h,
+          tone: highlight.contains(name)
+              ? DiagramTone.cleat
+              : DiagramTone.panel,
+        ),
+      );
       final cx = b.x + b.w / 2;
       final DiagramPoint at;
       switch (name) {
@@ -1466,6 +1486,78 @@ class AssemblyDiagramBuilder {
       shapes: shapes,
       labels: labels,
       large: true,
+    );
+  }
+
+  /// The finished unit seen from the side, cut through the left column, to
+  /// scale.
+  ///
+  /// It shows every horizontal panel across the depth, the 1/4" back and the
+  /// toe kick, so a builder can compare depth, shelf heights and the back with
+  /// their own work. Panels whose names are in [highlight] use the cleat tone.
+  AssemblyDiagram sideView(
+    Plan plan, {
+    required String caption,
+    Set<String> highlight = const {},
+  }) {
+    final ids = PieceIds(plan);
+    final g = plan.geometry;
+    final depth = plan.depthPanel;
+    const cut = {
+      'Top panel',
+      'Bottom panel',
+      'Head panel',
+      'Sill panel',
+      'Left column shelf',
+    };
+    final counts = <String, int>{};
+    final shapes = <DiagramShape>[];
+    for (var k = 0; k < g.panels.length; k++) {
+      final name = g.panelNames[k];
+      final n = counts[name] = (counts[name] ?? -1) + 1;
+      if (!cut.contains(name)) continue;
+      final b = g.panels[k];
+      shapes.add(
+        DiagramShape.rect(
+          0,
+          b.y,
+          depth,
+          b.h,
+          label: ids.id(name, n),
+          tone: highlight.contains(name)
+              ? DiagramTone.cleat
+              : DiagramTone.panel,
+        ),
+      );
+    }
+    shapes.add(
+      DiagramShape.rect(
+        depth,
+        0,
+        Limits.backT,
+        plan.ringH,
+        label: 'back',
+        tone: DiagramTone.back,
+      ),
+    );
+    final kick = g.toeKickBox;
+    if (kick != null) {
+      shapes.add(
+        DiagramShape.rect(
+          2,
+          kick.y,
+          depth - 2,
+          kick.h,
+          label: ids.id(PartsBuilder.toeKickName),
+          tone: DiagramTone.cleat,
+        ),
+      );
+    }
+    return AssemblyDiagram(
+      caption: caption,
+      width: depth + Limits.backT,
+      height: plan.ringH,
+      shapes: shapes,
     );
   }
 

@@ -73,11 +73,40 @@ class AssemblyGuideBuilder {
     );
     final concrete = i.concreteWall;
 
+    // The finished unit from the front and the side, shown at the start of
+    // each stage so the builder knows what the stage is heading toward. The
+    // parts this stage builds are drawn in the highlight tone.
+    List<AssemblyDiagram> goal(String stage, Set<String> highlight) => [
+      dg.elevation(
+        plan,
+        caption:
+            'Goal, front view (to scale): the finished unit.'
+            '${highlight.isEmpty ? '' : ' $stage is shaded.'}',
+        highlight: highlight,
+      ),
+      dg.sideView(
+        plan,
+        caption:
+            'Goal, side view (to scale): a cut through the left column, '
+            'front on the left, back panel on the right.',
+        highlight: highlight,
+      ),
+    ];
+    const goalNote =
+        'The pictures at the top of this step show the finished unit from '
+        'the front and the side. Look back at them whenever you are unsure '
+        'what the part you are building should look like.';
+
     String plural(int count, String word) => count == 1 ? word : '${word}s';
     final cleatW = f(Limits.anchorCleatW);
     const pilot =
-        'Drill a pilot hole for every screw first (a 1/8" bit is typical for '
-        '1-1/4" screws) so the plywood does not split.';
+        'Drill a pilot hole for every screw first so the plywood does not '
+        'split: a 1/8" bit for the #8 screws (9/64" for the #10 wall '
+        'screws), drilled as deep as the screw is long. Keep each hole at '
+        'least 1/2" from any edge. A combination pilot and countersink bit '
+        'is best: set its collar so a flat-head screw finishes flush with '
+        'the face, not sunk below it. Washer-head cabinet screws sit on top '
+        'of the surface and need only the pilot.';
     final screwPlace =
         '${f(Fasteners.edgeInset)} in from the front edge and '
         '${f(Fasteners.edgeInset)} in from the back edge'
@@ -92,14 +121,14 @@ class AssemblyGuideBuilder {
       if (i.edgeStiffener)
         'Solid front edge band: ${(plan.edgeBandInches / 12).toStringAsFixed(1)} '
             'linear feet.',
-      'Wood glue, 1-1/4" screws or pocket screws, 18 gauge brad nails, and '
-          '${concrete ? '3/16" x 2-1/4" concrete screws' : 'construction screws'} '
+      'Wood glue, ${Fasteners.boxScrew} or pocket screws, 18 gauge brad nails, and '
+          '${concrete ? Fasteners.concreteScrew : Fasteners.studScrew} '
           'for the wall.',
       'Fasteners to buy (about, plus a few spares): '
-          '1-1/4" screws: ${counter.columnScrews(plan, plan.leftCol) + counter.columnScrews(plan, plan.rightCol) + counter.barScrews(plan, plan.topBar) + counter.barScrews(plan, plan.bottomBar) + counter.ringScrews(plan) + counter.toeKickScrews(plan)}. '
+          '${Fasteners.boxScrew}: ${counter.boxScrews(plan)}. '
           '1" brad nails: ${counter.backBrads(plan)}. '
-          '2" screws for the unit cleat: ${counter.unitCleatScrews(plan)}. '
-          '${concrete ? '3/16" x 2-1/4" concrete screws' : '3" screws'} '
+          '${Fasteners.unitCleatScrew} for the unit cleat: ${counter.unitCleatScrews(plan)}. '
+          '${concrete ? Fasteners.concreteScrew : Fasteners.studScrew} '
           'for the wall cleat: ${counter.wallCleatScrews(plan)}.',
       'Circular saw with a straight edge guide or a table saw, drill, clamps, '
           'a large square, a level, and '
@@ -242,8 +271,20 @@ class AssemblyGuideBuilder {
           ] else
             'No fixed shelves are needed for this height, so there is nothing '
                 'to mark. Put $inner aside.',
+          if (left) goalNote,
         ],
-        [if (c.shelves > 0) dg.columnMarks(plan, left: left)],
+        [
+          if (left)
+            ...goal('The left and right columns', {
+              'Outer column panel',
+              'Inner column panel',
+              'Left column shelf',
+              'Right column shelf',
+              'Left column divider',
+              'Right column divider',
+            }),
+          if (c.shelves > 0) dg.columnMarks(plan, left: left),
+        ],
       );
 
       for (var k = 0; k < c.shelves; k++) {
@@ -436,8 +477,22 @@ class AssemblyGuideBuilder {
             'The gaps between dividers are ${f(b.bayW)} clear.',
           ] else
             'No dividers are needed for this width.',
+          if (top) goalNote,
         ],
-        [dg.barMarks(plan, top: top)],
+        [
+          if (top)
+            ...goal('The top and bottom bars', {
+              'Top panel',
+              'Bottom panel',
+              'Head panel',
+              'Sill panel',
+              'Top bar divider',
+              'Bottom bar divider',
+              'Top bar shelf',
+              'Bottom bar shelf',
+            }),
+          dg.barMarks(plan, top: top),
+        ],
       );
 
       if (b.dividers > 0 && hasCleat) {
@@ -568,8 +623,19 @@ class AssemblyGuideBuilder {
         'Lay the top bar unit ($topLong with its bar) on the floor with the '
             'back edge down and the outside face of $topLong facing the wall '
             'end of your work area. Clamp it so it cannot roll.',
+        goalNote,
       ],
-      [dg.ringStage(plan, stage: 0)],
+      [
+        ...goal('The whole ring', {
+          'Top panel',
+          'Bottom panel',
+          'Head panel',
+          'Sill panel',
+          'Outer column panel',
+          'Inner column panel',
+        }),
+        dg.ringStage(plan, stage: 0),
+      ],
     );
 
     for (final left in [true, false]) {
@@ -748,7 +814,8 @@ class AssemblyGuideBuilder {
       'With a helper, turn the ring over so the front edges are on the floor '
           'and the open backs face up.',
       'Keep it on a flat floor while you work on the backs.',
-    ]);
+      goalNote,
+    ], goal('The backs', {}));
 
     const backNames = [
       'Back panel, left column',
@@ -807,6 +874,7 @@ class AssemblyGuideBuilder {
         'French cleat: fasten unit piece $unit to the ${left ? 'left' : 'right'} column',
         [
           'Leave the unit face down with the back facing up.',
+          if (k == 0) goalNote,
           if (shelfNo != null)
             'This is the ${rowLabel[row]}. Center $unit on ${left ? ids.id(shelfName, shelfNo - 1) : 'the shelf level with it'}, '
                 'so the screws bite the shelf edge behind the 1/4" back. The '
@@ -826,13 +894,14 @@ class AssemblyGuideBuilder {
               'bottom, and its sharp point faces the wall.',
           'The same row on the ${left ? 'right' : 'left'} column must be at '
               'the same height above the bottom of the unit.',
-          'Spread glue on the back of $unit. Drive 2" screws through it and '
+          'Spread glue on the back of $unit. Drive ${Fasteners.unitCleatScrew} through it and '
               'the 1/4" back into the shelf or panel edge: ${f(Fasteners.cleatEndInset)} from each end, '
               'then one at least every ${f(Fasteners.screwSpacing)} along the '
               'middle of the strip.',
           pilot,
         ],
         [
+          if (k == 0) ...goal('The cleat', {}),
           dg.unitCleat(plan, current: k),
           dg.cleatScrews(plan, wall: false, piece: k),
         ],
@@ -893,7 +962,9 @@ class AssemblyGuideBuilder {
           'Each row of cleat must cross at least one stud. If a column is '
               'narrower than the stud spacing it may not, so use hollow wall '
               'anchors rated for the load in that case.',
+        goalNote,
       ],
+      goal('The wall mount', {}),
     );
 
     for (var k = 0; k < 4; k++) {
@@ -933,7 +1004,7 @@ class AssemblyGuideBuilder {
             'Hold it on the level line with its sloped edge on top and its '
                 'sharp point sticking out from the wall. Its top edge is '
                 '$height above the floor.',
-            'Drive 3" screws through it into every stud it crosses: two per '
+            'Drive ${Fasteners.studScrew} through it into every stud it crosses: two per '
                 'stud, one ${f(Fasteners.wallScrewEdgeInset)} below the top '
                 'edge and one ${f(Fasteners.wallScrewEdgeInset)} above the '
                 'bottom edge.',
@@ -957,7 +1028,7 @@ class AssemblyGuideBuilder {
             '3/4" plywood between the bar and the wall at each screw so it '
             'does not pull the back out of shape.',
         if (concrete)
-          'Use the same 3/16" x 2-1/4" concrete screws: '
+          'Use the same ${Fasteners.concreteScrew}: '
               'drill through the anchor cleat and the spacer into the wall '
               'with the 5/32" bit, blow out the dust, then drive the screws '
               'snug.',

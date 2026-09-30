@@ -11,6 +11,16 @@ class FastenerCounter {
   /// Creates a counter.
   const FastenerCounter();
 
+  /// All the box screws (#8 x 1-1/4") in the unit: columns, bars, the joins
+  /// between them and the toe kick.
+  int boxScrews(Plan plan) =>
+      columnScrews(plan, plan.leftCol) +
+      columnScrews(plan, plan.rightCol) +
+      barScrews(plan, plan.topBar) +
+      barScrews(plan, plan.bottomBar) +
+      ringScrews(plan) +
+      toeKickScrews(plan);
+
   /// 1-1/4" screws for one column: shelf ends and divider ends.
   int columnScrews(Plan plan, ColumnPlan c) {
     final joints = c.shelves * 2 + c.dividers * (c.shelves + 1) * 2;

@@ -1,4 +1,5 @@
 import 'package:bookshelf_builder/features/planner/domain/models/assembly_diagram.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/diagram_tone.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/inputs.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
@@ -21,6 +22,19 @@ void main() {
   };
 
   group('AssemblyDiagramBuilder', () {
+    test('the side view cuts through the panels, back and toe kick', () {
+      final d = dg.sideView(plan, caption: 'side');
+      expect(d.width, plan.depthPanel + 0.21875);
+      expect(d.height, plan.ringH);
+      expect(labels(d), contains('back'));
+      expect(labels(d), contains(ids.id('Top panel')));
+    });
+
+    test('highlighted panels use the cleat tone in the front view', () {
+      final d = dg.elevation(plan, caption: 'front', highlight: {'Top panel'});
+      expect(d.shapes.where((s) => s.tone == DiagramTone.cleat), isNotEmpty);
+    });
+
     test('the cleat pair shows both halves apart and hooked', () {
       final d = dg.cleatPair(plan);
       expect(d.shapes.length, 4);

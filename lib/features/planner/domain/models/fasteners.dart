@@ -5,6 +5,18 @@
 class Fasteners {
   const Fasteners._();
 
+  /// Screw that joins the 3/4" plywood boxes: shelves, dividers, bars, toe kick.
+  static const String boxScrew = '#8 x 1-1/4" cabinet screws';
+
+  /// Screw for the unit half of the French cleat.
+  static const String unitCleatScrew = '#8 x 2" cabinet screws';
+
+  /// Screw for the wall half of the cleat on a stud wall.
+  static const String studScrew = '#10 x 3" structural screws';
+
+  /// Screw for the wall half of the cleat on a concrete wall.
+  static const String concreteScrew = '3/16" x 2-1/4" concrete screws';
+
   /// Distance from the front and back edge of a panel to the first screw.
   static const double edgeInset = 1;
 

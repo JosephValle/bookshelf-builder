@@ -28,7 +28,7 @@ void main() {
         'Safety glasses',
         '4 ft level',
         'Stud finder',
-        'Structural screws',
+        'structural screws',
       ]) {
         expect(has(t, name), isTrue, reason: name);
       }
@@ -124,7 +124,7 @@ void main() {
       expect(names, isNot(contains('Stud finder')));
       expect(names.any((n) => n.contains('Hammer drill')), isTrue);
       expect(names.any((n) => n.contains('Blow-out')), isTrue);
-      expect(names.any((n) => n.contains('Concrete screws')), isTrue);
+      expect(names.any((n) => n.contains('concrete screws')), isTrue);
     });
 
     test('the stud finder uses the chosen stud spacing', () {

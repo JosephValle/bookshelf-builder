@@ -1,3 +1,4 @@
+import 'package:bookshelf_builder/features/planner/domain/models/fasteners.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/tool_recommendation.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/inches_formatter.dart';
@@ -49,7 +50,7 @@ class ToolRecommender {
         reason: 'Checks every shelf for square and every part for length.',
       ),
       const ToolRecommendation(
-        name: 'Wood glue and 1-1/4" screws',
+        name: 'Wood glue and ${Fasteners.boxScrew}',
         reason: 'Glued and screwed joints keep the box beams stiff.',
       ),
       const ToolRecommendation(
@@ -79,7 +80,7 @@ class ToolRecommender {
           reason: 'Clears the dust from each hole so the screw grips.',
         ),
         const ToolRecommendation(
-          name: 'Concrete screws (3/16" x 2-1/4") and anti-tip straps',
+          name: '${Fasteners.concreteScrew} and anti-tip straps',
           reason:
               'Fasten the wall half of the cleat, and anchor the unit through '
               'the solid anchor cleat, not the 1/4" back alone.',
@@ -92,7 +93,7 @@ class ToolRecommender {
               'cleat and the anti-tip anchors.',
         ),
         const ToolRecommendation(
-          name: 'Structural screws (about 3") and anti-tip straps',
+          name: '${Fasteners.studScrew} and anti-tip straps',
           reason:
               'Anchors the unit to the wall through the solid anchor cleat, '
               'not the 1/4" back alone.',

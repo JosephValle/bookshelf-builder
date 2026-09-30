@@ -6,6 +6,19 @@ import '../../support/plan_helpers.dart';
 
 void main() {
   group('ShoppingListBuilder', () {
+    test('screws and brads carry a size, a count and a box quantity', () {
+      final items = const ShoppingListBuilder().build(planFor());
+      final box = items.firstWhere((i) => i.id == 'screws-1-1-4');
+      expect(box.name, contains('#8 x 1-1/4" cabinet screws'));
+      expect(box.name, contains('box of 100'));
+      expect(box.name, contains('need about'));
+      expect(box.quantity, greaterThanOrEqualTo(1));
+      final brads = items.firstWhere((i) => i.id == 'brads-1');
+      expect(brads.name, contains('need about'));
+      final wall = items.firstWhere((i) => i.id == 'screws-structural');
+      expect(wall.name, contains('#10 x 3"'));
+    });
+
     test('lists materials and tools with quantities from the plan', () {
       final items = const ShoppingListBuilder().build(planFor());
       expect(items.where((i) => !i.isTool), isNotEmpty);

@@ -11,6 +11,18 @@ void main() {
   final perJoint = Fasteners.screwsPerJoint(plan.depthPanel);
 
   group('FastenerCounter', () {
+    test('boxScrews totals the columns, bars, ring joins and toe kick', () {
+      expect(
+        counter.boxScrews(plan),
+        counter.columnScrews(plan, plan.leftCol) +
+            counter.columnScrews(plan, plan.rightCol) +
+            counter.barScrews(plan, plan.topBar) +
+            counter.barScrews(plan, plan.bottomBar) +
+            counter.ringScrews(plan) +
+            counter.toeKickScrews(plan),
+      );
+    });
+
     test('a column takes screws for both ends of every shelf', () {
       expect(
         counter.columnScrews(plan, plan.leftCol),

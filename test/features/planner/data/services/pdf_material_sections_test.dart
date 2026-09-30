@@ -18,8 +18,8 @@ void main() {
       pdfText(await renderWidgets(sections.all(planFor(i))));
 
   group('all', () {
-    test('returns the five cards', () {
-      expect(sections.all(planFor()).length, 5);
+    test('returns the six cards', () {
+      expect(sections.all(planFor()).length, 6);
     });
 
     test('renders every card title', () async {
@@ -27,6 +27,7 @@ void main() {
       for (final title in [
         'Plywood',
         'Estimated cost',
+        'Supplies to buy',
         'Recommended tools',
         'Buying',
         'Wall attachment',

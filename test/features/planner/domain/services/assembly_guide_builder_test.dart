@@ -177,10 +177,13 @@ void main() {
 
     test('the gather step totals the fasteners to buy', () {
       final text = textOf(step(steps(), 'Gather materials and tools'));
-      expect(text, contains('1-1/4" screws:'));
+      expect(text, contains('1-1/4" cabinet screws:'));
       expect(text, contains('1" brad nails:'));
-      expect(text, contains('2" screws for the unit cleat: 12'));
-      expect(text, contains('3" screws for the wall cleat: 8'));
+      expect(text, contains('2" cabinet screws for the unit cleat: 12'));
+      expect(
+        text,
+        contains('#10 x 3" structural screws for the wall cleat: 8'),
+      );
     });
 
     test('brads are placed 3/8 inch from edges and 6 inches apart', () {
@@ -191,13 +194,13 @@ void main() {
 
     test('unit cleat screws are placed from the ends', () {
       final text = textOf(step(steps(), 'French cleat: fasten unit piece'));
-      expect(text, contains('2" screws'));
+      expect(text, contains('2" cabinet screws'));
       expect(text, contains('1" from each end'));
     });
 
     test('wall cleat screws are two per stud', () {
       final text = textOf(step(steps(), 'Mount: screw wall piece'));
-      expect(text, contains('3" screws'));
+      expect(text, contains('#10 x 3" structural screws'));
       expect(text, contains('two per stud'));
     });
   });
@@ -510,7 +513,7 @@ void main() {
 
     test('hardware counts come from the picture', () {
       final hw = step(steps(), 'Left column: attach shelf D1').hardware;
-      expect(hw, contains('3 x 1-1/4" screws'));
+      expect(hw, contains('3 x #8 x 1-1/4" cabinet screws'));
       expect(hw, contains('wood glue'));
       expect(step(steps(), 'Back panel').hardware.first, contains('brad'));
     });
@@ -555,7 +558,7 @@ void main() {
 
     test('a stud wall piece still uses 3 inch screws at each stud', () {
       final text = textOf(step(stud, 'Mount: screw wall piece'));
-      expect(text, contains('3" screws'));
+      expect(text, contains('#10 x 3" structural screws'));
       expect(text, isNot(contains('carbide')));
     });
 

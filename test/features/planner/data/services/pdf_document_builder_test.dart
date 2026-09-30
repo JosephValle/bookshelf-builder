@@ -118,6 +118,15 @@ void main() {
       },
     );
 
+    test('lists the supplies with screw sizes and quantities', () async {
+      const plain = PdfDocumentBuilder(compress: false);
+      final text = pdfText(await plain.build(planFor()));
+      expect(text, contains('Supplies to buy'));
+      expect(text, contains('#8 x 1-1/4" cabinet screws'));
+      expect(text, contains('box of 100'));
+      expect(text, contains('countersink'));
+    });
+
     test('a concrete wall changes the wall note and the wall steps', () async {
       const plain = PdfDocumentBuilder(compress: false);
       final text = pdfText(

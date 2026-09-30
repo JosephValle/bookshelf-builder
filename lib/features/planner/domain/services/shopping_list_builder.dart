@@ -1,11 +1,14 @@
+import 'package:bookshelf_builder/features/planner/domain/models/fasteners.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/price_catalog.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/shopping_item.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/shopping_kind.dart';
+import 'package:bookshelf_builder/features/planner/domain/services/fastener_counter.dart';
 
 /// Lists the tools and consumable supplies for a plan with their prices.
 ///
-/// Quantities come from the plan. Prices come from
+/// Quantities come from the plan; fasteners are counted in boxes of a standard
+/// size, and their names carry the exact count needed. Prices come from
 /// [PriceCatalog.supplyPrices] and are null until a listing price has been
 /// recorded for that item.
 class ShoppingListBuilder {
@@ -36,6 +39,10 @@ class ShoppingListBuilder {
       unitPrice: prices[id],
       essential: essential,
     );
+    const counter = FastenerCounter();
+    // Boxes needed for [n] fasteners in boxes of [size], with 10 percent
+    // spares. The box sizes are standard round numbers, not a retailer's.
+    int boxes(int n, int size) => (n * 1.1 / size).ceil().clamp(1, 99);
     const m = ShoppingKind.material;
     const t = ShoppingKind.tool;
     return [
@@ -46,12 +53,38 @@ class ShoppingListBuilder {
         (sheets / 4).ceil().clamp(1, 99),
         'bottle',
       ),
-      item('screws-1-1-4', '1-1/4" screws', m, 1, 'box'),
-      item('brads-1', '1" brad nails, 18 gauge', m, 1, 'box'),
-      if (plan.inputs.concreteWall)
-        item('screws-concrete', 'Concrete screws, 3/16" x 2-1/4"', m, 1, 'box')
-      else
-        item('screws-structural', 'Structural screws, about 3"', m, 1, 'box'),
+      ...[
+        ('screws-1-1-4', Fasteners.boxScrew, counter.boxScrews(plan), 100),
+        (
+          'screws-unit-cleat',
+          Fasteners.unitCleatScrew,
+          counter.unitCleatScrews(plan),
+          100,
+        ),
+        ('brads-1', '1" brad nails, 18 gauge', counter.backBrads(plan), 1000),
+        if (plan.inputs.concreteWall)
+          (
+            'screws-concrete',
+            Fasteners.concreteScrew,
+            counter.wallCleatScrews(plan),
+            25,
+          )
+        else
+          (
+            'screws-structural',
+            Fasteners.studScrew,
+            counter.wallCleatScrews(plan),
+            50,
+          ),
+      ].map(
+        (f) => item(
+          f.$1,
+          '${f.$2}, box of ${f.$4} (need about ${f.$3})',
+          m,
+          boxes(f.$3, f.$4),
+          'box',
+        ),
+      ),
       item('anti-tip', 'Anti-tip straps', m, 1, 'pack'),
       if (plan.inputs.onFloor) item('shims', 'Shims', m, 1, 'pack'),
       item('sandpaper', 'Sandpaper, 150 grit', m, 1, 'pack'),

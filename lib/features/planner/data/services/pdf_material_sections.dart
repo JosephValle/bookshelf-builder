@@ -8,12 +8,13 @@ import 'package:bookshelf_builder/features/planner/domain/models/tool_recommenda
 import 'package:bookshelf_builder/features/planner/domain/services/cost_estimator.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/inches_formatter.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/money_formatter.dart';
+import 'package:bookshelf_builder/features/planner/domain/services/shopping_list_builder.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/tool_recommender.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 /// The styled cards of the PDF materials section: plywood, estimated cost,
-/// recommended tools, buying and wall attachment. Each card mirrors the card
+/// supplies to buy, recommended tools, buying and wall attachment. Each card mirrors the card
 /// of the same name on the Materials tab.
 class PdfMaterialSections {
   /// Creates the sections.
@@ -22,6 +23,7 @@ class PdfMaterialSections {
     this.money = const MoneyFormatter(),
     this.estimator = const CostEstimator(),
     this.tools = const ToolRecommender(),
+    this.shopping = const ShoppingListBuilder(),
   });
 
   /// Inch formatting.
@@ -36,12 +38,16 @@ class PdfMaterialSections {
   /// Recommends the tools.
   final ToolRecommender tools;
 
+  /// Lists the supplies to buy, with sizes and quantities.
+  final ShoppingListBuilder shopping;
+
   static String _sheets(int n) => '$n sheet${n == 1 ? '' : 's'}';
 
   /// Every card, in the order they appear on the Materials tab.
   List<pw.Widget> all(Plan plan) => [
     plywood(plan),
     cost(plan),
+    supplies(plan),
     toolChecklist(plan),
     buying(),
     wallAttachment(plan),
@@ -135,6 +141,21 @@ class PdfMaterialSections {
     }
     children.add(pw.Text(PriceCatalog.note, style: PdfStyles.caption));
     return PdfCard.build(title: 'Estimated cost', children: children);
+  }
+
+  /// The supplies to buy: glue, screws with their gauge and length, brads and
+  /// the rest, each with how many boxes or packs.
+  pw.Widget supplies(Plan plan) {
+    return PdfCard.build(
+      title: 'Supplies to buy',
+      children: [
+        for (final item in shopping.build(plan).where((i) => !i.isTool))
+          PdfKeyValueRow.build(
+            label: item.name,
+            value: '${item.quantity} ${item.unit}',
+          ),
+      ],
+    );
   }
 
   /// The recommended tools as a checklist with an "Optional" badge on the
