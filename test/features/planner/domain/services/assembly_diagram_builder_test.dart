@@ -1,11 +1,16 @@
+import 'dart:math' as math;
+
 import 'package:bookshelf_builder/features/planner/domain/models/assembly_diagram.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/diagram_shape.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/diagram_tone.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/inputs.dart';
+import 'package:bookshelf_builder/features/planner/domain/models/limits.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/part_material.dart';
 import 'package:bookshelf_builder/features/planner/domain/models/plan.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/assembly_diagram_builder.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/assembly_guide_builder.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/cut_layout_builder.dart';
+import 'package:bookshelf_builder/features/planner/domain/services/fastener_counter.dart';
 import 'package:bookshelf_builder/features/planner/domain/services/piece_ids.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -16,10 +21,73 @@ void main() {
   final plan = planFor();
   final ids = PieceIds(plan);
 
+  /// Every piece id or name written on a picture, on a shape or beside it.
   Set<String> labels(AssemblyDiagram d) => {
     for (final s in d.shapes)
       if (s.label.isNotEmpty) s.label,
+    for (final l in d.labels) l.text,
   };
+
+  group('AssemblyDiagramBuilder scale', () {
+    double wide(DiagramShape s) =>
+        s.points.map((p) => p.x).reduce(math.max) -
+        s.points.map((p) => p.x).reduce(math.min);
+    double tall(DiagramShape s) =>
+        s.points.map((p) => p.y).reduce(math.max) -
+        s.points.map((p) => p.y).reduce(math.min);
+
+    test('a column picture keeps one scale for panel, shelf and thickness', () {
+      final d = dg.columnDone(plan, left: true);
+      final panel = d.shapes.first;
+      final shelf = d.shapes[1];
+      final u = tall(panel) / plan.sideH;
+      expect(wide(panel), closeTo(Limits.t * u, 1e-9));
+      expect(wide(shelf), closeTo(plan.leftCol.clearW * u, 1e-9));
+      expect(tall(shelf), closeTo(Limits.t * u, 1e-9));
+    });
+
+    test('shelf marks sit at their real height on the panel', () {
+      final d = dg.columnShelf(plan, left: true, k: 1);
+      final panel = d.shapes.first;
+      final u = tall(panel) / plan.sideH;
+      final bottom = panel.points.map((p) => p.y).reduce(math.max);
+      final pos = dg.shelfPos(plan, left: true, k: 2);
+      expect(bottom - d.dimensions.single.to.y, closeTo(pos * u, 1e-9));
+    });
+
+    test('the bar section keeps the real depth to height ratio', () {
+      final d = dg.barCleat(plan, top: true);
+      final skin = d.shapes[1];
+      final divider = d.shapes[3];
+      expect(
+        wide(skin) / tall(skin),
+        closeTo(plan.depthPanel / Limits.t, 1e-9),
+      );
+      expect(
+        wide(divider) / tall(divider),
+        closeTo(plan.depthPanel / plan.topBar.dividerLength, 1e-9),
+      );
+    });
+
+    test('the back panels and the window share the ring scale', () {
+      final d = dg.backs(plan, current: 3);
+      final u = d.width / plan.ringW;
+      expect(d.height, closeTo(plan.ringH * u, 1e-9));
+      final window = d.shapes.last;
+      expect(wide(window), closeTo(plan.inputs.openW * u, 1e-9));
+      expect(tall(window), closeTo(plan.inputs.openH * u, 1e-9));
+    });
+
+    test('cleat screw pictures draw the strip at its real proportions', () {
+      final d = dg.cleatScrews(plan, wall: false, piece: 0);
+      final strip = d.shapes.single;
+      final len = const FastenerCounter().cleatPieceLengths(plan)[0];
+      expect(
+        wide(strip) / tall(strip),
+        closeTo(len / Limits.anchorCleatW, 1e-9),
+      );
+    });
+  });
 
   group('AssemblyDiagramBuilder', () {
     test('the side view cuts through the panels, back and toe kick', () {
@@ -209,10 +277,15 @@ void main() {
       expect(d.dimensions.map((e) => e.text), ['1"', '1"', '6" or less']);
     });
 
-    test('wall cleat screws are two per stud', () {
+    test('wall cleat screws are two per stud the piece crosses', () {
       final d = dg.cleatScrews(plan, wall: true, piece: 0);
-      expect(d.marks.length, 4);
-      expect(d.dimensions.map((e) => e.text), ['1"', '1"', '16"']);
+      const counter = FastenerCounter();
+      expect(d.marks.length, counter.pieceScrews(plan, 0, wall: true));
+      expect(d.dimensions.map((e) => e.text), ['1"', '1"']);
+      final wide = planFor(const Inputs(left: 24, right: 24));
+      final w = dg.cleatScrews(wide, wall: true, piece: 0);
+      expect(w.marks.length, 4);
+      expect(w.dimensions.map((e) => e.text), ['1"', '1"', '16"']);
     });
 
     test('the mount picture shows the 3/4 inch gap', () {

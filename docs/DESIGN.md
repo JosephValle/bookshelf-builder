@@ -67,7 +67,7 @@ Each step also lists the **tools** it uses, each with what it is for ("Drill wit
 
 The last page of the guide, "Where every piece goes", repeats the main drawing with the id of every panel written beside it (shelves just above their line, dividers just to the right, column panels just inside their column), plus the back with its four panels. It is built from `Geometry.panelNames`, which names each drawn panel so its id can be looked up.
 
-Pictures are `AssemblyDiagram`s: flat, not to scale, with piece ids on the shapes, arrows for movement, screw marks and dimension lines. They are built in the domain layer by `AssemblyDiagramBuilder` and drawn into the PDF by `PdfDiagram`. A test checks every point of every picture stays inside its canvas.
+Pictures are `AssemblyDiagram`s: flat and drawn to scale (one uniform scale per picture, real inches for every panel, cleat, screw distance and gap; only tags, screw symbols and arrows are fixed size, and cropped views say so in the caption), with piece ids on the shapes, arrows for movement, screw marks and dimension lines. They are built in the domain layer by `AssemblyDiagramBuilder` and drawn into the PDF by `PdfDiagram`. A test checks every point of every picture stays inside its canvas.
 
 ## Wall type and stud spacing
 

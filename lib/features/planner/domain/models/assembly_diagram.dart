@@ -8,7 +8,10 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'assembly_diagram.freezed.dart';
 
-/// A rough, not to scale picture that goes with an assembly step.
+/// A picture that goes with an assembly step, drawn to scale.
+///
+/// One scale applies to the whole picture. Tags, screw symbols and arrows are
+/// fixed size, and a caption says so when a view is cut off.
 @freezed
 abstract class AssemblyDiagram with _$AssemblyDiagram {
   const AssemblyDiagram._();
